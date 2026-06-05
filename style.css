@@ -1,0 +1,97 @@
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#0f172a;
+    color:white;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.container{
+    width:850px;
+    text-align:center;
+    background:#1e293b;
+    padding:40px;
+    border-radius:22px;
+    box-shadow:0 0 35px rgba(0,0,0,0.35);
+}
+
+h1{
+    font-size:64px;
+    margin-bottom:10px;
+}
+
+p{
+    color:#cbd5e1;
+    font-size:18px;
+}
+
+input[type=file]{
+    margin-top:20px;
+    padding:12px;
+    background:#0f172a;
+    border-radius:10px;
+}
+
+button{
+    background:#22c55e;
+    color:white;
+    border:none;
+    padding:15px 38px;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:18px;
+    font-weight:bold;
+}
+
+button:hover{
+    transform:scale(1.05);
+}
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin-top:30px;
+}
+
+.card{
+    background:#0f172a;
+    padding:22px;
+    border-radius:16px;
+    border:1px solid #334155;
+}
+
+.card h3{
+    color:#94a3b8;
+    margin-bottom:12px;
+}
+
+.card strong{
+    font-size:24px;
+    color:#22c55e;
+}
+
+.yorum{
+    margin-top:30px;
+    background:#020617;
+    padding:25px;
+    border-radius:16px;
+    text-align:left;
+    border-left:5px solid #22c55e;
+}
+
+.yorum h2{
+    margin-top:0;
+}
+
+.hidden{
+    display:none;
+}.slogan{
+    color:#22c55e;
+    margin-top:-10px;
+    margin-bottom:25px;
+    font-weight:normal;
+}

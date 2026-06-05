@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BordroAI</title>
+<link rel="stylesheet" href="style.css">
+</head><script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<body>
+
+<div class="container">
+    <h1>BordroAI</h1>
+    <h3 class="slogan">
+Türkiye'nin İlk Yapay Zekâ Destekli Bordro Analiz Sistemi
+</h3>
+    <p>Bordronuzu yükleyin ve maaşınızı yapay zekâ ile analiz edin.</p>
+
+    <input type="file" id="pdfSec" accept=".pdf,.jpg,.jpeg,.png">
+
+    <br><br>
+
+    <button onclick="dosyaSec()">Bordro Yükle</button>
+
+    <p id="sonuc"></p>
+
+    <div id="analizKartlari" class="cards hidden">
+        <div class="card">
+            <h3>Net Maaş</h3>
+            <strong>39.820 TL</strong>
+        </div>
+
+        <div class="card">
+            <h3>Mesai</h3>
+            <strong>7.920 TL</strong>
+        </div>
+
+        <div class="card">
+            <h3>Prim</h3>
+            <strong>3.000 TL</strong>
+        </div>
+
+        <div class="card">
+            <h3>Kesintiler</h3>
+            <strong>10.908 TL</strong>
+        </div>
+    </div>
+
+    <div id="yorum" class="yorum hidden">
+        <h2>AI Yorumu</h2>
+        <p>
+            Bu ay 39.820 TL net ücret almışsınız. Bordronuzda 7.920 TL mesai,
+            3.000 TL devam primi ve 10.908 TL kesinti görünüyor.
+            İlk kontrolde olağan dışı bir durum tespit edilmedi.
+        </p>
+    </div>
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
