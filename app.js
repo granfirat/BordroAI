@@ -1,3 +1,22 @@
+window.addEventListener("load", () => {
+    const splash = document.getElementById("splash-screen");
+
+    if (!splash) return;
+
+    setTimeout(() => {
+        splash.classList.add("splash-hidden");
+
+        setTimeout(() => {
+            splash.remove();
+        }, 900);
+    }, 3000);
+});
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+let raporVerisi = {};
+
 async function dosyaSec() {
     const dosya = document.getElementById("pdfSec").files[0];
 
@@ -6,31 +25,327 @@ async function dosyaSec() {
         return;
     }
 
+    temizle();
+
     const dosyaAdi = dosya.name.toLowerCase();
 
-    document.getElementById("sonuc").innerText =
-        "Dosya seçildi: " + dosya.name;
+    try {
+        let metin = "";
 
-    if (dosyaAdi.endsWith(".pdf")) {
-        document.getElementById("sonuc").innerText =
-            "PDF algılandı. PDF okuma sistemi hazırlanıyor...";
+        if (dosyaAdi.endsWith(".jpg") || dosyaAdi.endsWith(".jpeg") || dosyaAdi.endsWith(".png")) {
+            document.getElementById("sonuc").innerText = "Görsel OCR ile okunuyor, lütfen bekleyin...";
+            metin = await gorselOku(dosya);
+        } else if (dosyaAdi.endsWith(".pdf")) {
+            document.getElementById("sonuc").innerText = "PDF resme çevriliyor ve OCR ile okunuyor, lütfen bekleyin...";
+            metin = await pdfOcrOku(dosya);
+        } else {
+            document.getElementById("sonuc").innerText = "Bu dosya türü desteklenmiyor.";
+            return;
+        }
+
+        console.log("OKUNAN METİN:");
+        console.log(metin);
+
+        bordroAnalizEt(metin);
+    } catch (hata) {
+        console.error(hata);
+        document.getElementById("sonuc").innerText = "Bir hata oluştu. Console ekranını kontrol et.";
     }
-    else if (
-        dosyaAdi.endsWith(".jpg") ||
-        dosyaAdi.endsWith(".jpeg") ||
-        dosyaAdi.endsWith(".png")
-    ) {
+}
+
+function temizle() {
+    document.getElementById("sonuc").innerText = "";
+    document.getElementById("analizKartlari").classList.add("hidden");
+    document.getElementById("detayKartlari").classList.add("hidden");
+    document.getElementById("toplamPanel").classList.add("hidden");
+    document.getElementById("yorum").classList.add("hidden");
+    document.getElementById("ozetPanel").classList.add("hidden");
+    document.getElementById("skorPanel").classList.add("hidden");
+    document.getElementById("kontrolPanel").classList.add("hidden");
+    document.getElementById("raporBtn").classList.add("hidden");
+
+    document.querySelectorAll(".card strong").forEach(kart => {
+        kart.innerText = "Bulunamadı";
+    });
+
+    document.getElementById("toplamYasalKesinti").innerText = "0 TL";
+    document.getElementById("toplamNetOdenen").innerText = "0 TL";
+    document.getElementById("toplamEkOdeme").innerText = "0 TL";
+    document.getElementById("bordroSkoru").innerText = "0";
+    document.getElementById("skorAciklama").innerText = "Analiz bekleniyor...";
+}
+
+async function gorselOku(dosya) {
+    const sonuc = await Tesseract.recognize(dosya, "tur");
+    return sonuc.data.text;
+}
+
+async function pdfOcrOku(dosya) {
+    const arrayBuffer = await dosya.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    let tumMetin = "";
+
+    for (let sayfaNo = 1; sayfaNo <= pdf.numPages; sayfaNo++) {
         document.getElementById("sonuc").innerText =
-            "Görsel algılandı. OCR sistemi hazırlanıyor...";
-    }
-    else {
-        document.getElementById("sonuc").innerText =
-            "Bu dosya türü desteklenmiyor. Lütfen PDF, JPG veya PNG yükleyin.";
-        return;
+            "PDF OCR okunuyor... Sayfa " + sayfaNo + "/" + pdf.numPages;
+
+        const sayfa = await pdf.getPage(sayfaNo);
+        const viewport = sayfa.getViewport({ scale: 3 });
+
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await sayfa.render({
+            canvasContext: context,
+            viewport: viewport
+        }).promise;
+
+        const ocrSonuc = await Tesseract.recognize(canvas, "tur");
+        tumMetin += ocrSonuc.data.text + " ";
     }
 
-    setTimeout(function() {
-        document.getElementById("analizKartlari").classList.remove("hidden");
-        document.getElementById("yorum").classList.remove("hidden");
-    }, 1000);
+    return tumMetin;
+}
+
+function bordroAnalizEt(metin) {
+    document.getElementById("sonuc").innerText = "Bordro okundu. Analiz tamamlandı.";
+
+    const temizMetin = metniTemizle(metin);
+
+    const netMaas = netMaasBul(temizMetin);
+    const mesai = mesaiBul(temizMetin);
+    const prim = primBul(temizMetin);
+    const kesinti = kesintiBul(temizMetin);
+
+    const sgkPrimi = sgkPrimiBul(temizMetin);
+    const gelirVergisi = gelirVergisiBul(temizMetin);
+    const damgaVergisi = damgaVergisiBul(temizMetin);
+    const besTutari = besTutariBul(temizMetin);
+
+    const toplamYasalKesintiDeger =
+        paraDegeriniAl(sgkPrimi) +
+        paraDegeriniAl(gelirVergisi) +
+        paraDegeriniAl(damgaVergisi) +
+        paraDegeriniAl(besTutari);
+
+    const toplamYasalKesinti = paraFormatla(toplamYasalKesintiDeger);
+
+    const toplamEkOdemeDeger =
+        paraDegeriniAl(mesai) +
+        paraDegeriniAl(prim);
+
+    const toplamEkOdeme = paraFormatla(toplamEkOdemeDeger);
+
+    document.getElementById("analizKartlari").classList.remove("hidden");
+    document.getElementById("detayKartlari").classList.remove("hidden");
+    document.getElementById("toplamPanel").classList.remove("hidden");
+    document.getElementById("yorum").classList.remove("hidden");
+    document.getElementById("ozetPanel").classList.remove("hidden");
+    document.getElementById("skorPanel").classList.remove("hidden");
+    document.getElementById("kontrolPanel").classList.remove("hidden");
+    document.getElementById("raporBtn").classList.remove("hidden");
+
+    const anaKartlar = document.querySelectorAll("#analizKartlari .card strong");
+    anaKartlar[0].innerText = netMaas;
+    anaKartlar[1].innerText = mesai;
+    anaKartlar[2].innerText = prim;
+    anaKartlar[3].innerText = kesinti;
+
+    const detayKartlar = document.querySelectorAll("#detayKartlari .card strong");
+    detayKartlar[0].innerText = sgkPrimi;
+    detayKartlar[1].innerText = gelirVergisi;
+    detayKartlar[2].innerText = damgaVergisi;
+    detayKartlar[3].innerText = besTutari;
+
+    document.getElementById("toplamYasalKesinti").innerText = toplamYasalKesinti;
+    document.getElementById("toplamNetOdenen").innerText = netMaas;
+    document.getElementById("toplamEkOdeme").innerText = toplamEkOdeme;
+
+    document.getElementById("analizDurumu").innerText = "Başarılı";
+    document.getElementById("riskSeviyesi").innerText = "Düşük";
+
+    let skor = 0;
+    if (netMaas !== "Bulunamadı") skor += 25;
+    if (mesai !== "Bulunamadı") skor += 20;
+    if (prim !== "Bulunamadı") skor += 15;
+    if (kesinti !== "Bulunamadı") skor += 20;
+    if (sgkPrimi !== "Bulunamadı") skor += 7;
+    if (gelirVergisi !== "Bulunamadı") skor += 7;
+    if (damgaVergisi !== "Bulunamadı") skor += 6;
+
+    document.getElementById("bordroSkoru").innerText = skor;
+    document.getElementById("skorAciklama").innerText =
+        skor >= 90
+            ? "Bordro başarıyla analiz edildi."
+            : "Bordro analiz edildi fakat bazı kalemler eksik olabilir.";
+
+    const kontrol = kontrolMotoru(netMaas, mesai, prim, kesinti);
+
+    document.getElementById("maasKontrolIcon").innerText = kontrol.maasIcon;
+    document.getElementById("maasKontrolText").innerText = kontrol.maasText;
+    document.getElementById("mesaiKontrolIcon").innerText = kontrol.mesaiIcon;
+    document.getElementById("mesaiKontrolText").innerText = kontrol.mesaiText;
+    document.getElementById("kesintiKontrolIcon").innerText = kontrol.kesintiIcon;
+    document.getElementById("kesintiKontrolText").innerText = kontrol.kesintiText;
+
+    const yorum =
+        "Bordronuz başarıyla OCR ile okundu. Net maaşınız " + netMaas +
+        ", net fazla mesai ödemeniz " + mesai +
+        ", prim toplamınız " + prim +
+        ", toplam kesintileriniz " + kesinti +
+        " olarak tespit edildi.";
+
+    document.querySelector("#yorum p").innerText = yorum;
+
+    raporVerisi = {
+        netMaas,
+        mesai,
+        prim,
+        kesinti,
+        sgkPrimi,
+        gelirVergisi,
+        damgaVergisi,
+        besTutari,
+        toplamYasalKesinti,
+        toplamEkOdeme,
+        skor,
+        yorum
+    };
+}
+
+function kontrolMotoru(netMaas, mesai, prim, kesinti) {
+    const net = paraDegeriniAl(netMaas);
+    const mesaiDegeri = paraDegeriniAl(mesai);
+    const kesintiDegeri = paraDegeriniAl(kesinti);
+
+    return {
+        maasIcon: net > 0 ? "🟢" : "🔴",
+        maasText: net > 0 ? "Net maaş başarıyla tespit edildi." : "Net maaş tespit edilemedi.",
+        mesaiIcon: mesaiDegeri > 0 ? "🟢" : "🟡",
+        mesaiText: mesaiDegeri > 0 ? "Fazla mesai ödemesi tespit edildi." : "Fazla mesai tespit edilemedi.",
+        kesintiIcon: kesintiDegeri > 0 ? "🟢" : "🔴",
+        kesintiText: kesintiDegeri > 0 ? "Kesinti tutarı tespit edildi." : "Kesinti tutarı tespit edilemedi."
+    };
+}
+
+function raporIndir() {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+
+    pdf.setFontSize(22);
+    pdf.text("BordroAI Analiz Raporu", 20, 25);
+
+    pdf.setFontSize(12);
+    pdf.text("Net Maaş: " + raporVerisi.netMaas, 20, 45);
+    pdf.text("Net Mesai: " + raporVerisi.mesai, 20, 57);
+    pdf.text("Prim: " + raporVerisi.prim, 20, 69);
+    pdf.text("Kesinti: " + raporVerisi.kesinti, 20, 81);
+    pdf.text("SGK Primi: " + raporVerisi.sgkPrimi, 20, 93);
+    pdf.text("Gelir Vergisi: " + raporVerisi.gelirVergisi, 20, 105);
+    pdf.text("Damga Vergisi: " + raporVerisi.damgaVergisi, 20, 117);
+    pdf.text("BES Tutarı: " + raporVerisi.besTutari, 20, 129);
+    pdf.text("Toplam Yasal Kesinti: " + raporVerisi.toplamYasalKesinti, 20, 141);
+    pdf.text("Toplam Ek Ödeme: " + raporVerisi.toplamEkOdeme, 20, 153);
+    pdf.text("Bordro Skoru: " + raporVerisi.skor + "/100", 20, 165);
+
+    pdf.save("BordroAI-Analiz-Raporu.pdf");
+}
+
+function metniTemizle(metin) {
+    return metin
+        .replace(/\s+/g, " ")
+        .replace(/İ/g, "I").replace(/ı/g, "i")
+        .replace(/Ö/g, "O").replace(/ö/g, "o")
+        .replace(/Ü/g, "U").replace(/ü/g, "u")
+        .replace(/Ğ/g, "G").replace(/ğ/g, "g")
+        .replace(/Ş/g, "S").replace(/ş/g, "s")
+        .replace(/Ç/g, "C").replace(/ç/g, "c")
+        .replace(/:/g, " : ");
+}
+
+function netMaasBul(metin) {
+    const eslesme =
+        metin.match(/NET\s*ODENEN\s*:\s*([\d.]+,\d+)/i) ||
+        metin.match(/NET\s*KAZANC\s*:\s*([\d.]+,\d+)/i);
+
+    return eslesme ? paraTemizle(eslesme[1]) : "Bulunamadı";
+}
+
+function mesaiBul(metin) {
+    const eslesme =
+        metin.match(/(?:FRM150|FM150|F\.?M.*?150|FM4150).*?(\d+,\d+).*?(\d+\.\d+,\d+).*?(\d+\.\d+,\d+)/i);
+
+    return eslesme ? paraTemizle(eslesme[3]) : "Bulunamadı";
+}
+
+function primBul(metin) {
+    let toplam = 0;
+
+    const devamsizlik = metin.match(/DEVAMSIZLIK\s*PRIMI.*?([\d.]+,\d+)/i);
+    const performans = metin.match(/PERFORMANS\s*PRIMI.*?([\d.]+,\d+)/i);
+
+    if (devamsizlik) toplam += paraSayiyaCevir(devamsizlik[1]);
+    if (performans) toplam += paraSayiyaCevir(performans[1]);
+
+    return toplam > 0 ? paraFormatla(toplam) : "Bulunamadı";
+}
+
+function kesintiBul(metin) {
+    const eslesme =
+        metin.match(/YASAL\s*KESINTI\s*:\s*([\d.]+,\d+)/i) ||
+        metin.match(/TOPLAM\s*KESINTI\s*:\s*([\d.]+,\d+)/i) ||
+        metin.match(/KESINTILER\s*:\s*([\d.]+,\d+)/i);
+
+    return eslesme ? paraTemizle(eslesme[1]) : "Bulunamadı";
+}
+
+function sgkPrimiBul(metin) {
+    const eslesme = metin.match(/SGK\s*PRIMI\s*:\s*([\d.]+,\d+)/i);
+    return eslesme ? paraTemizle(eslesme[1]) : "Bulunamadı";
+}
+
+function gelirVergisiBul(metin) {
+    const eslesme = metin.match(/GELIR\s*VERGISI\s*:\s*([\d.]+,\d+)/i);
+    return eslesme ? paraTemizle(eslesme[1]) : "Bulunamadı";
+}
+
+function damgaVergisiBul(metin) {
+    const eslesme = metin.match(/DAMGA\s*VERGISI\s*:\s*([\d.]+,\d+)/i);
+    return eslesme ? paraTemizle(eslesme[1]) : "Bulunamadı";
+}
+
+function besTutariBul(metin) {
+    const eslesme = metin.match(/BES\s*TUTARI\s*:\s*([\d.]+,\d+)/i);
+    return eslesme ? paraTemizle(eslesme[1]) : "Bulunamadı";
+}
+
+function paraTemizle(deger) {
+    return deger ? deger.trim() + " TL" : "Bulunamadı";
+}
+
+function paraFormatla(sayi) {
+    return sayi.toLocaleString("tr-TR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }) + " TL";
+}
+
+function paraDegeriniAl(deger) {
+    if (!deger || deger === "Bulunamadı") return 0;
+
+    return Number(
+        deger.replace("TL", "").replace(/\./g, "").replace(",", ".").replace(/[^\d.]/g, "")
+    );
+}
+
+function paraSayiyaCevir(deger) {
+    if (!deger) return 0;
+
+    return Number(
+        deger.replace(/\./g, "").replace(",", ".").replace(/[^\d.]/g, "")
+    );
 }
