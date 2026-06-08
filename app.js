@@ -1,79 +1,112 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+    updateProfile
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyB8-SxAyXCyFw1lt6-EuktXJY6zXhm1wI",
+    authDomain: "bordroai.firebaseapp.com",
+    projectId: "bordroai",
+    storageBucket: "bordroai.firebasestorage.app",
+    messagingSenderId: "339688158624",
+    appId: "1:339688158624:web:c66c9347c2223fe1a7a0c5",
+    measurementId: "G-9BN75D34ZQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
 pdfjsLib.GlobalWorkerOptions.workerSrc =
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 let raporVerisi = {};
 
-/* KULLANICI PANELİ */
-window.addEventListener("DOMContentLoaded", () => {
-    const aktifKullanici = JSON.parse(localStorage.getItem("aktifKullanici"));
+/* FIREBASE KULLANICI PANELİ */
+onAuthStateChanged(auth, (user) => {
+    const authContainer = document.getElementById("authContainer");
+    const appContainer = document.getElementById("appContainer");
+    const kullaniciBilgi = document.getElementById("kullaniciBilgi");
 
-    if (aktifKullanici) {
-        document.getElementById("authContainer").classList.add("hidden");
-        document.getElementById("appContainer").classList.remove("hidden");
-        document.getElementById("kullaniciBilgi").innerText =
-            "Hoş geldin, " + aktifKullanici.adSoyad;
+    if (user) {
+        authContainer.classList.add("hidden");
+        appContainer.classList.remove("hidden");
+
+        kullaniciBilgi.innerText =
+            "Hoş geldin, " + (user.displayName || user.email);
+    } else {
+        authContainer.classList.remove("hidden");
+        appContainer.classList.add("hidden");
     }
 });
 
-function kayitOl() {
+window.kayitOl = async function () {
     const adSoyad = document.getElementById("adSoyad").value.trim();
     const email = document.getElementById("email").value.trim();
     const sifre = document.getElementById("sifre").value.trim();
+    const authMesaj = document.getElementById("authMesaj");
 
     if (!adSoyad || !email || !sifre) {
-        document.getElementById("authMesaj").innerText =
-            "Lütfen tüm alanları doldurun.";
+        authMesaj.innerText = "Lütfen tüm alanları doldurun.";
         return;
     }
 
-    const kullanici = { adSoyad, email, sifre };
+    if (sifre.length < 6) {
+        authMesaj.innerText = "Şifre en az 6 karakter olmalı.";
+        return;
+    }
 
-    localStorage.setItem("kullanici_" + email, JSON.stringify(kullanici));
+    try {
+        const sonuc = await createUserWithEmailAndPassword(auth, email, sifre);
 
-    document.getElementById("authMesaj").innerText =
-        "Kayıt başarılı. Şimdi giriş yapabilirsiniz.";
-}
+        await updateProfile(sonuc.user, {
+            displayName: adSoyad
+        });
 
-function girisYap() {
+        authMesaj.innerText = "Kayıt başarılı. Giriş yapıldı.";
+    } catch (error) {
+        console.error(error);
+        authMesaj.innerText = hataMesaji(error.code);
+    }
+};
+
+window.girisYap = async function () {
     const email = document.getElementById("email").value.trim();
     const sifre = document.getElementById("sifre").value.trim();
+    const authMesaj = document.getElementById("authMesaj");
 
     if (!email || !sifre) {
-        document.getElementById("authMesaj").innerText =
-            "E-posta ve şifre girin.";
+        authMesaj.innerText = "E-posta ve şifre girin.";
         return;
     }
 
-    const veri = localStorage.getItem("kullanici_" + email);
-
-    if (!veri) {
-        document.getElementById("authMesaj").innerText =
-            "Bu e-posta ile kayıt bulunamadı.";
-        return;
+    try {
+        await signInWithEmailAndPassword(auth, email, sifre);
+        authMesaj.innerText = "Giriş başarılı.";
+    } catch (error) {
+        console.error(error);
+        authMesaj.innerText = hataMesaji(error.code);
     }
+};
 
-    const kullanici = JSON.parse(veri);
+window.cikisYap = async function () {
+    await signOut(auth);
+};
 
-    if (kullanici.sifre !== sifre) {
-        document.getElementById("authMesaj").innerText =
-            "Şifre hatalı.";
-        return;
-    }
-
-    localStorage.setItem("aktifKullanici", JSON.stringify(kullanici));
-
-    document.getElementById("authContainer").classList.add("hidden");
-    document.getElementById("appContainer").classList.remove("hidden");
-
-    document.getElementById("kullaniciBilgi").innerText =
-        "Hoş geldin, " + kullanici.adSoyad;
+function hataMesaji(kod) {
+    if (kod === "auth/email-already-in-use") return "Bu e-posta zaten kayıtlı.";
+    if (kod === "auth/invalid-email") return "Geçerli bir e-posta girin.";
+    if (kod === "auth/weak-password") return "Şifre en az 6 karakter olmalı.";
+    if (kod === "auth/invalid-credential") return "E-posta veya şifre hatalı.";
+    if (kod === "auth/user-not-found") return "Bu e-posta ile kayıt bulunamadı.";
+    if (kod === "auth/wrong-password") return "Şifre hatalı.";
+    return "Bir hata oluştu: " + kod;
 }
-
-function cikisYap() {
-    localStorage.removeItem("aktifKullanici");
-    location.reload();
-}
-
 /* BORDRO OKUMA */
 async function dosyaSec() {
     const dosya = document.getElementById("pdfSec").files[0];
