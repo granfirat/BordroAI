@@ -10,13 +10,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyB8-SxAyXCyFw1lt6-EuktXJY6zXhm1wI",
-    authDomain: "bordroai.firebaseapp.com",
-    projectId: "bordroai",
-    storageBucket: "bordroai.firebasestorage.app",
-    messagingSenderId: "339688158624",
-    appId: "1:339688158624:web:c66c9347c2223fe1a7a0c5",
-    measurementId: "G-9BN75D34ZQ"
+  apiKey: "AIzaSyB8-SxAyXCyFw1lt6-EuktXJY6zXhmLiwI",
+  authDomain: "bordroai.firebaseapp.com",
+  projectId: "bordroai",
+  storageBucket: "bordroai.firebasestorage.app",
+  messagingSenderId: "339688158624",
+  appId: "1:339688158624:web:c66c9347c2223fe1a7a0c5",
+  measurementId: "G-9BN75D34ZQ"
 };
 
 const app = initializeApp(firebaseConfig);
