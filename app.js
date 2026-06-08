@@ -15,8 +15,8 @@ const firebaseConfig = {
   projectId: "bordroai",
   storageBucket: "bordroai.firebasestorage.app",
   messagingSenderId: "339688158624",
-  appId: "1:339688158624:web:c66c9347c2223fe1a7a0c5",
-  measurementId: "G-9BN75D34ZQ"
+  appId: "1:339688158624:web:828709cea8cefde6a7a0c5",
+  measurementId: "G-CKML9SDKVP"
 };
 
 const app = initializeApp(firebaseConfig);
