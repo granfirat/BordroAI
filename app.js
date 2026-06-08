@@ -10,7 +10,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB8-SxAyXCyFw1lt6-EuktXJY6zXhmLiwI",
+  apiKey: "AIzaSyB8-SxAyXCyFw1lt6-EuktXJY6zXhmliwI",
   authDomain: "bordroai.firebaseapp.com",
   projectId: "bordroai",
   storageBucket: "bordroai.firebasestorage.app",
