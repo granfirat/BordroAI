@@ -9,6 +9,12 @@ import {
     updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
+import {
+    getFirestore,
+    doc,
+    setDoc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyB8-SxAyXCyFw1lt6-EuktXJY6zXhmliwI",
   authDomain: "bordroai.firebaseapp.com",
@@ -21,7 +27,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-
+const db = getFirestore(app);
 pdfjsLib.GlobalWorkerOptions.workerSrc =
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
@@ -63,7 +69,12 @@ window.kayitOl = async function () {
 
     try {
         const sonuc = await createUserWithEmailAndPassword(auth, email, sifre);
-
+await setDoc(doc(db, "users", sonuc.user.uid), {
+    uid: sonuc.user.uid,
+    adSoyad: adSoyad,
+    email: sonuc.user.email,
+    createdAt: serverTimestamp()
+});
         await updateProfile(sonuc.user, {
             displayName: adSoyad
         });
