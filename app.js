@@ -16,6 +16,8 @@ import {
     serverTimestamp,
     collection,
     getDocs
+    addDoc
+
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -75,6 +77,38 @@ async function kullaniciSayisiniGetir() {
         }
     } catch (error) {
         console.error("Kullanıcı sayısı alınamadı:", error);
+    }
+}async function analizSayisiniGetir() {
+    try {
+        const snapshot = await getDocs(collection(db, "analizler"));
+        const toplam = snapshot.size;
+
+        const alan = document.getElementById("toplamAnaliz");
+
+        if (alan) {
+            alan.innerText = toplam;
+        }
+    } catch (error) {
+        console.error("Analiz sayısı alınamadı:", error);
+    }
+}
+
+async function analizKaydet() {
+    const user = auth.currentUser;
+
+    if (!user) return;
+
+    try {
+        await addDoc(collection(db, "analizler"), {
+            uid: user.uid,
+            email: user.email,
+            adSoyad: user.displayName || "",
+            createdAt: serverTimestamp()
+        });
+
+        analizSayisiniGetir();
+    } catch (error) {
+        console.error("Analiz kaydedilemedi:", error);
     }
 }
 
@@ -427,7 +461,7 @@ function bordroAnalizEt(metin) {
         riskSeviyesi,
         yorum
     };
-}
+}analizKaydet();
 
 function kontrolMotoru(netMaas, mesai, prim, kesinti) {
     const net = paraDegeriniAl(netMaas);
