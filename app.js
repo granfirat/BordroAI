@@ -13,25 +13,70 @@ import {
     getFirestore,
     doc,
     setDoc,
-    serverTimestamp
+    serverTimestamp,
+    collection,
+    getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
 const firebaseConfig = {
-  apiKey: "AIzaSyB8-SxAyXCyFw1lt6-EuktXJY6zXhmliwI",
-  authDomain: "bordroai.firebaseapp.com",
-  projectId: "bordroai",
-  storageBucket: "bordroai.firebasestorage.app",
-  messagingSenderId: "339688158624",
-  appId: "1:339688158624:web:828709cea8cefde6a7a0c5",
-  measurementId: "G-CKML9SDKVP"
+    apiKey: "AIzaSyB8-SxAyXCyFw1lt6-EuktXJY6zXhmliwI",
+    authDomain: "bordroai.firebaseapp.com",
+    projectId: "bordroai",
+    storageBucket: "bordroai.firebasestorage.app",
+    messagingSenderId: "339688158624",
+    appId: "1:339688158624:web:828709cea8cefde6a7a0c5",
+    measurementId: "G-CKML9SDKVP"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
 pdfjsLib.GlobalWorkerOptions.workerSrc =
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 let raporVerisi = {};
+
+/* KULLANICI SAYACI */
+function kullaniciSayaciKutusuOlustur() {
+    const appContainer = document.getElementById("appContainer");
+
+    if (!appContainer) return;
+    if (document.getElementById("kullaniciSayaciKutusu")) return;
+
+    const kutu = document.createElement("div");
+    kutu.id = "kullaniciSayaciKutusu";
+    kutu.style.background = "#111827";
+    kutu.style.border = "1px solid #334155";
+    kutu.style.borderRadius = "16px";
+    kutu.style.padding = "20px";
+    kutu.style.maxWidth = "260px";
+    kutu.style.margin = "25px auto";
+    kutu.style.textAlign = "center";
+    kutu.style.color = "white";
+
+    kutu.innerHTML = `
+        <h3 style="color:#22c55e; margin-bottom:10px;">Toplam Kullanıcı</h3>
+        <p id="toplamKullanici" style="font-size:36px; font-weight:bold; margin:0;">0</p>
+    `;
+
+    appContainer.prepend(kutu);
+}
+
+async function kullaniciSayisiniGetir() {
+    try {
+        const snapshot = await getDocs(collection(db, "users"));
+        const toplam = snapshot.size;
+
+        const alan = document.getElementById("toplamKullanici");
+
+        if (alan) {
+            alan.innerText = toplam;
+        }
+    } catch (error) {
+        console.error("Kullanıcı sayısı alınamadı:", error);
+    }
+}
 
 /* FIREBASE KULLANICI PANELİ */
 onAuthStateChanged(auth, (user) => {
@@ -45,6 +90,9 @@ onAuthStateChanged(auth, (user) => {
 
         kullaniciBilgi.innerText =
             "Hoş geldin, " + (user.displayName || user.email);
+
+        kullaniciSayaciKutusuOlustur();
+        kullaniciSayisiniGetir();
     } else {
         authContainer.classList.remove("hidden");
         appContainer.classList.add("hidden");
@@ -69,17 +117,20 @@ window.kayitOl = async function () {
 
     try {
         const sonuc = await createUserWithEmailAndPassword(auth, email, sifre);
-await setDoc(doc(db, "users", sonuc.user.uid), {
-    uid: sonuc.user.uid,
-    adSoyad: adSoyad,
-    email: sonuc.user.email,
-    createdAt: serverTimestamp()
-});
+
+        await setDoc(doc(db, "users", sonuc.user.uid), {
+            uid: sonuc.user.uid,
+            adSoyad: adSoyad,
+            email: sonuc.user.email,
+            createdAt: serverTimestamp()
+        });
+
         await updateProfile(sonuc.user, {
             displayName: adSoyad
         });
 
         authMesaj.innerText = "Kayıt başarılı. Giriş yapıldı.";
+        kullaniciSayisiniGetir();
     } catch (error) {
         console.error(error);
         authMesaj.innerText = hataMesaji(error.code);
@@ -118,6 +169,7 @@ function hataMesaji(kod) {
     if (kod === "auth/wrong-password") return "Şifre hatalı.";
     return "Bir hata oluştu: " + kod;
 }
+
 /* BORDRO OKUMA */
 async function dosyaSec() {
     const dosya = document.getElementById("pdfSec").files[0];
@@ -162,6 +214,8 @@ async function dosyaSec() {
             "Bir hata oluştu. Console ekranını kontrol et.";
     }
 }
+
+window.dosyaSec = dosyaSec;
 
 function temizle() {
     document.getElementById("sonuc").innerText = "";
@@ -422,6 +476,8 @@ function raporIndir() {
 
     pdf.save("BordroAI-Analiz-Raporu.pdf");
 }
+
+window.raporIndir = raporIndir;
 
 /* METİN TEMİZLEME */
 function metniTemizle(metin) {
