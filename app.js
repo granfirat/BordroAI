@@ -38,31 +38,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 
 let raporVerisi = {};
 
-/* KULLANICI SAYACI */
-function kullaniciSayaciKutusuOlustur() {
-    const appContainer = document.getElementById("appContainer");
 
-    if (!appContainer) return;
-    if (document.getElementById("kullaniciSayaciKutusu")) return;
-
-    const kutu = document.createElement("div");
-    kutu.id = "kullaniciSayaciKutusu";
-    kutu.style.background = "#111827";
-    kutu.style.border = "1px solid #334155";
-    kutu.style.borderRadius = "16px";
-    kutu.style.padding = "20px";
-    kutu.style.maxWidth = "260px";
-    kutu.style.margin = "25px auto";
-    kutu.style.textAlign = "center";
-    kutu.style.color = "white";
-
-    kutu.innerHTML = `
-        <h3 style="color:#22c55e; margin-bottom:10px;">Toplam Kullanıcı</h3>
-        <p id="toplamKullanici" style="font-size:36px; font-weight:bold; margin:0;">0</p>
-    `;
-
-    appContainer.prepend(kutu);
-}
 
 async function kullaniciSayisiniGetir() {
     try {
@@ -112,7 +88,7 @@ async function analizKaydet() {
 }
 
 /* FIREBASE KULLANICI PANELİ */
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, (user) => {kullaniciSayisiniGetir();
     const authContainer = document.getElementById("authContainer");
     const appContainer = document.getElementById("appContainer");
     const kullaniciBilgi = document.getElementById("kullaniciBilgi");
@@ -124,8 +100,8 @@ onAuthStateChanged(auth, (user) => {
         kullaniciBilgi.innerText =
             "Hoş geldin, " + (user.displayName || user.email);
 
-        kullaniciSayaciKutusuOlustur();
         kullaniciSayisiniGetir();
+        analizSayisiniGetir();
     } else {
         authContainer.classList.remove("hidden");
         appContainer.classList.add("hidden");
@@ -241,6 +217,7 @@ async function dosyaSec() {
         console.log(metin);
 
         bordroAnalizEt(metin);
+        await analizKaydet();
     } catch (hata) {
         console.error(hata);
         document.getElementById("sonuc").innerText =
