@@ -647,5 +647,3 @@ function paraSayiyaCevir(deger) {
         console.error(err);
     }
 }
-
-window.cikisYap = cikisYap;
