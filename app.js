@@ -107,6 +107,15 @@ onAuthStateChanged(auth, (user) => {kullaniciSayisiniGetir();
         appContainer.classList.add("hidden");
     }
 });
+async function cikisYap() {
+    try {
+        await signOut(auth);
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+window.cikisYap = cikisYap;
 
 window.kayitOl = async function () {
     const adSoyad = document.getElementById("adSoyad").value.trim();
@@ -621,4 +630,22 @@ function paraSayiyaCevir(deger) {
             .replace(",", ".")
             .replace(/[^\d.]/g, "")
     );
+}async function cikisYap() {
+    try {
+        await signOut(auth);
+
+        document.getElementById("appContainer")
+            .classList.add("hidden");
+
+        document.getElementById("authContainer")
+            .classList.remove("hidden");
+
+        document.getElementById("authMesaj").innerText =
+            "Başarıyla çıkış yapıldı.";
+    }
+    catch (err) {
+        console.error(err);
+    }
 }
+
+window.cikisYap = cikisYap;
