@@ -6,7 +6,12 @@
     <title>BordroAI</title>
 
     <link rel="stylesheet" href="style.css" />
-
+    <link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#22c55e" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="BordroAI" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <!-- OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
@@ -287,6 +292,16 @@
 
         </main>
     </div>
+<script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker
+                .register("/service-worker.js")
+                .then(() => console.log("BordroAI PWA aktif."))
+                .catch((error) => console.error("PWA kayıt hatası:", error));
+        });
+    }
+</script>
 
     <script type="module" src="app.js"></script>
 </body>
