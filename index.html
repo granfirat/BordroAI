@@ -25,21 +25,93 @@
         <p>Yapay zekâ destekli bordro analiz sistemi</p>
     </div>
 
-    <!-- GİRİŞ / KAYIT ALANI -->
+    <!-- LANDING + GİRİŞ / KAYIT -->
     <div id="authContainer" class="auth-container">
-        <div class="auth-box">
-            <div class="logo-circle">B</div>
-            <h1>BordroAI</h1>
-            <p class="slogan">Türkiye’nin yapay zekâ destekli bordro analiz sistemi</p>
+        <div class="landing-wrapper">
 
-            <input id="adSoyad" type="text" placeholder="Ad Soyad" />
-            <input id="email" type="email" placeholder="E-posta" />
-            <input id="sifre" type="password" placeholder="Şifre" />
+            <section class="landing-left">
+                <div class="brand-row">
+                    <div class="logo-circle">B</div>
+                    <div>
+                        <h1>BordroAI</h1>
+                        <p>Yapay zekâ destekli bordro analiz sistemi</p>
+                    </div>
+                </div>
 
-            <button onclick="kayitOl()">Kayıt Ol</button>
-            <button class="secondary-btn" onclick="girisYap()">Giriş Yap</button>
+                <h2>Bordronu yükle, maaşını saniyeler içinde kontrol et.</h2>
 
-            <p id="authMesaj"></p>
+                <p class="landing-text">
+                    BordroAI; PDF, JPG ve PNG bordrolarını OCR ile okuyarak net maaş,
+                    fazla mesai, prim, kesinti ve vergi kalemlerini analiz eder.
+                    Sonuçlarını güvenli hesabında saklar ve PDF rapor olarak indirmeni sağlar.
+                </p>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <span>📄</span>
+                        <strong>PDF / Görsel Analizi</strong>
+                        <p>Bordro dosyanı yükle, sistem otomatik okusun.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <span>🔐</span>
+                        <strong>Güvenli Hesap</strong>
+                        <p>Analizlerin sadece kendi hesabında görünür.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <span>📊</span>
+                        <strong>Akıllı Bordro Skoru</strong>
+                        <p>Maaş, mesai ve kesinti kalemlerini puanlar.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <span>⬇️</span>
+                        <strong>PDF Rapor</strong>
+                        <p>Analiz sonucunu rapor olarak indirebilirsin.</p>
+                    </div>
+                </div>
+
+                <div class="trust-row">
+                    <div>
+                        <strong>OCR</strong>
+                        <span>PDF & Görsel okuma</span>
+                    </div>
+
+                    <div>
+                        <strong>Firebase</strong>
+                        <span>Güvenli giriş sistemi</span>
+                    </div>
+
+                    <div>
+                        <strong>BordroAI</strong>
+                        <span>Kişisel analiz geçmişi</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="auth-box">
+                <div class="auth-badge">Erken erişim</div>
+
+                <h2>Hesabına giriş yap</h2>
+                <p class="auth-info">
+                    Bordronu analiz etmek ve geçmiş raporlarını görmek için giriş yap veya ücretsiz hesap oluştur.
+                </p>
+
+                <input id="adSoyad" type="text" placeholder="Ad Soyad" />
+                <input id="email" type="email" placeholder="E-posta" />
+                <input id="sifre" type="password" placeholder="Şifre" />
+
+                <button onclick="kayitOl()">Ücretsiz Kayıt Ol</button>
+                <button class="secondary-btn" onclick="girisYap()">Giriş Yap</button>
+
+                <p id="authMesaj"></p>
+
+                <p class="privacy-note">
+                    Bordro verilerin hesabına bağlı olarak saklanır. Başka kullanıcılar analizlerini göremez.
+                </p>
+            </section>
+
         </div>
     </div>
 
@@ -60,7 +132,6 @@
 
         <main class="container">
 
-            <!-- İSTATİSTİK -->
             <section class="stats-grid">
                 <div class="stat-card">
                     <span class="stat-number" id="toplamKullanici">0</span>
@@ -73,7 +144,6 @@
                 </div>
             </section>
 
-            <!-- DOSYA YÜKLEME -->
             <section class="upload-box">
                 <h2>Bordronu Yükle</h2>
                 <p>PDF, JPG, JPEG veya PNG formatında bordro dosyanı yükle.</p>
@@ -84,7 +154,6 @@
                 <p id="sonuc"></p>
             </section>
 
-            <!-- GEÇMİŞ ANALİZLER -->
             <section id="gecmisPanel" class="panel">
                 <div class="panel-title-row">
                     <div>
@@ -100,7 +169,6 @@
                 </div>
             </section>
 
-            <!-- ÖZET PANEL -->
             <section id="ozetPanel" class="panel hidden">
                 <h2>Analiz Özeti</h2>
 
@@ -117,7 +185,6 @@
                 </div>
             </section>
 
-            <!-- ANA KARTLAR -->
             <section id="analizKartlari" class="cards hidden">
                 <div class="card">
                     <p>Net Maaş</p>
@@ -140,7 +207,6 @@
                 </div>
             </section>
 
-            <!-- DETAY KARTLAR -->
             <section id="detayKartlari" class="cards hidden">
                 <div class="card detail">
                     <p>SGK Primi</p>
@@ -163,7 +229,6 @@
                 </div>
             </section>
 
-            <!-- TOPLAM PANEL -->
             <section id="toplamPanel" class="panel hidden">
                 <h2>Toplam Sonuç</h2>
 
@@ -183,7 +248,6 @@
                 </div>
             </section>
 
-            <!-- SKOR PANEL -->
             <section id="skorPanel" class="panel hidden">
                 <h2>Bordro Skoru</h2>
                 <div class="score">
@@ -193,7 +257,6 @@
                 <p id="skorAciklama">Analiz bekleniyor.</p>
             </section>
 
-            <!-- KONTROL PANEL -->
             <section id="kontrolPanel" class="panel hidden">
                 <h2>Akıllı Kontrol</h2>
 
@@ -213,7 +276,6 @@
                 </div>
             </section>
 
-            <!-- YORUM -->
             <section id="yorum" class="panel hidden">
                 <h2>BordroAI Yorumu</h2>
                 <p></p>
