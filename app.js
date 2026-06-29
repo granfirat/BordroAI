@@ -87,6 +87,12 @@ onAuthStateChanged(auth, async (user) => {
 
         authContainer.classList.remove("hidden");
         appContainer.classList.add("hidden");
+
+        const toplamKullaniciEl = document.getElementById("toplamKullanici");
+        const toplamAnalizEl = document.getElementById("toplamAnaliz");
+
+        if (toplamKullaniciEl) toplamKullaniciEl.innerText = "0";
+        if (toplamAnalizEl) toplamAnalizEl.innerText = "0";
     }
 });
 
@@ -488,25 +494,38 @@ async function analizKaydet() {
     }
 }
 
-/* SAYAÇLARI GÜNCELLE */
+/* GÜVENLİ SAYAÇLAR */
 async function sayaclariGuncelle() {
+    const toplamKullaniciEl = document.getElementById("toplamKullanici");
+    const toplamAnalizEl = document.getElementById("toplamAnaliz");
+
+    if (!aktifKullanici) {
+        if (toplamKullaniciEl) toplamKullaniciEl.innerText = "0";
+        if (toplamAnalizEl) toplamAnalizEl.innerText = "0";
+        return;
+    }
+
     try {
-        const kullaniciSnapshot = await getDocs(collection(db, "kullanicilar"));
-        const analizSnapshot = await getDocs(collection(db, "analizler"));
-
-        const toplamKullaniciEl = document.getElementById("toplamKullanici");
-        const toplamAnalizEl = document.getElementById("toplamAnaliz");
-
         if (toplamKullaniciEl) {
-            toplamKullaniciEl.innerText = kullaniciSnapshot.size;
+            toplamKullaniciEl.innerText = "1";
         }
 
+        const analizSorgusu = query(
+            collection(db, "analizler"),
+            where("uid", "==", aktifKullanici.uid)
+        );
+
+        const snapshot = await getDocs(analizSorgusu);
+
         if (toplamAnalizEl) {
-            toplamAnalizEl.innerText = analizSnapshot.size;
+            toplamAnalizEl.innerText = snapshot.size;
         }
 
     } catch (error) {
-        console.error("Sayaçlar güncellenemedi:", error);
+        console.error("Güvenli sayaçlar güncellenemedi:", error);
+
+        if (toplamKullaniciEl) toplamKullaniciEl.innerText = "1";
+        if (toplamAnalizEl) toplamAnalizEl.innerText = "0";
     }
 }
 
