@@ -1,125 +1,215 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BordroAI</title>
-    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+    <!-- PDF OKUMA -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <!-- PDF RAPOR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
-<div class="auth-container" id="authContainer">
-    <div class="auth-box">
+    <!-- AÇILIŞ EKRANI -->
+    <div id="splash-screen">
+        <div class="splash-logo">B</div>
         <h1>BordroAI</h1>
-        <p class="slogan">Kullanıcı Paneli</p>
-
-        <input type="text" id="adSoyad" placeholder="Ad Soyad">
-        <input type="email" id="email" placeholder="E-posta">
-        <input type="password" id="sifre" placeholder="Şifre">
-
-        <button onclick="kayitOl()">Kayıt Ol</button>
-        <button onclick="girisYap()" class="loginBtn">Giriş Yap</button>
-
-        <p id="authMesaj"></p>
-    </div>
-</div>
-
-<div class="app-container hidden" id="appContainer">
-
-    <div class="topbar">
-        <div>
-            <h2>BordroAI Panel</h2>
-            <div class="user-area">
-    <p id="kullaniciBilgi">Hoş geldin</p>
-    <button onclick="cikisYap()" class="logoutBtn">Çıkış Yap</button>
-</div>
-        </div>
-
-    </div>
-<div class="stats-grid">
-    <div class="stats-box">
-        <h3>Toplam Kullanıcı</h3>
-        <p id="toplamKullanici">0</p>
+        <p>Yapay zekâ destekli bordro analiz sistemi</p>
     </div>
 
-    <div class="stats-box">
-        <h3>Toplam Analiz</h3>
-        <p id="toplamAnaliz">0</p>
-    </div>
-</div>
-    <div class="container">
-        <div class="box">
+    <!-- GİRİŞ / KAYIT ALANI -->
+    <div id="authContainer" class="auth-container">
+        <div class="auth-box">
+            <div class="logo-circle">B</div>
             <h1>BordroAI</h1>
-            <p class="slogan">Türkiye'nin İlk Yapay Zekâ Destekli Bordro Analiz Sistemi</p>
-            <p class="desc">Bordronuzu yükleyin, maaşınızı ve bordro kalemlerinizi analiz edin.</p>
+            <p class="slogan">Türkiye’nin yapay zekâ destekli bordro analiz sistemi</p>
 
-            <input type="file" id="pdfSec" accept=".pdf,.jpg,.jpeg,.png">
-            <button onclick="dosyaSec()">Bordro Yükle</button>
+            <input id="adSoyad" type="text" placeholder="Ad Soyad" />
+            <input id="email" type="email" placeholder="E-posta" />
+            <input id="sifre" type="password" placeholder="Şifre" />
 
-            <p id="sonuc"></p>
+            <button onclick="kayitOl()">Kayıt Ol</button>
+            <button class="secondary-btn" onclick="girisYap()">Giriş Yap</button>
 
-            <div id="analizKartlari" class="cards hidden">
-                <div class="card"><span class="badge">Tespit edildi</span><h3>Net Maaş</h3><strong>Bulunamadı</strong></div>
-                <div class="card"><span class="badge">Tespit edildi</span><h3>Net Mesai</h3><strong>Bulunamadı</strong></div>
-                <div class="card"><span class="badge">Tespit edildi</span><h3>Prim</h3><strong>Bulunamadı</strong></div>
-                <div class="card"><span class="badge">Tespit edildi</span><h3>Kesintiler</h3><strong>Bulunamadı</strong></div>
-            </div>
-
-            <div id="detayKartlari" class="cards hidden">
-                <div class="card"><span class="badge">Alt kesinti</span><h3>SGK Primi</h3><strong>Bulunamadı</strong></div>
-                <div class="card"><span class="badge">Alt kesinti</span><h3>Gelir Vergisi</h3><strong>Bulunamadı</strong></div>
-                <div class="card"><span class="badge">Alt kesinti</span><h3>Damga Vergisi</h3><strong>Bulunamadı</strong></div>
-                <div class="card"><span class="badge">Alt kesinti</span><h3>BES Tutarı</h3><strong>Bulunamadı</strong></div>
-            </div>
-
-            <div id="toplamPanel" class="totalPanel hidden">
-                <h2>Toplam Sonuç</h2>
-                <div class="totalGrid">
-                    <div><p>Toplam Yasal Kesinti</p><b id="toplamYasalKesinti">0 TL</b></div>
-                    <div><p>Net Ödenen</p><b id="toplamNetOdenen">0 TL</b></div>
-                    <div><p>Toplam Prim + Mesai</p><b id="toplamEkOdeme">0 TL</b></div>
-                </div>
-            </div>
-
-            <div id="ozetPanel" class="summary hidden">
-                <h2>Bordro Özeti</h2>
-                <div class="summaryGrid">
-                    <div><p>Analiz Durumu</p><b id="analizDurumu">Başarılı</b></div>
-                    <div><p>Risk Seviyesi</p><b id="riskSeviyesi">Düşük</b></div>
-                    <div><p>Okuma Yöntemi</p><b>PDF OCR</b></div>
-                </div>
-            </div>
-
-            <div id="skorPanel" class="score hidden">
-                <h2>Bordro Skoru</h2>
-                <div class="scoreNumber" id="bordroSkoru">0</div>
-                <p id="skorAciklama">Analiz bekleniyor...</p>
-            </div>
-
-            <div id="kontrolPanel" class="controlPanel hidden">
-                <h2>Maaş Kontrol Motoru</h2>
-                <div class="controlGrid">
-                    <div class="controlCard"><span id="maasKontrolIcon">🟢</span><h3>Maaş Kontrolü</h3><p id="maasKontrolText">Analiz bekleniyor...</p></div>
-                    <div class="controlCard"><span id="mesaiKontrolIcon">🟢</span><h3>Mesai Kontrolü</h3><p id="mesaiKontrolText">Analiz bekleniyor...</p></div>
-                    <div class="controlCard"><span id="kesintiKontrolIcon">🟢</span><h3>Kesinti Kontrolü</h3><p id="kesintiKontrolText">Analiz bekleniyor...</p></div>
-                </div>
-            </div>
-
-            <div id="yorum" class="yorum hidden">
-                <h2>AI Yorumu</h2>
-                <p></p>
-            </div>
-
-            <button id="raporBtn" class="reportBtn hidden" onclick="raporIndir()">
-                Analiz Raporunu PDF Olarak İndir
-            </button>
+            <p id="authMesaj"></p>
         </div>
     </div>
-</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script type="module" src="app.js?v=2"></script>
+    <!-- UYGULAMA ALANI -->
+    <div id="appContainer" class="hidden">
 
+        <header class="topbar">
+            <div>
+                <h1>BordroAI</h1>
+                <p>Yapay zekâ destekli bordro analiz sistemi</p>
+            </div>
+
+            <div class="user-area">
+                <span id="kullaniciBilgi">Hoş geldin</span>
+                <button onclick="cikisYap()">Çıkış Yap</button>
+            </div>
+        </header>
+
+        <main class="container">
+
+            <!-- İSTATİSTİK -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number" id="toplamKullanici">0</span>
+                    <p>Toplam Kullanıcı</p>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-number" id="toplamAnaliz">0</span>
+                    <p>Toplam Analiz</p>
+                </div>
+            </section>
+
+            <!-- DOSYA YÜKLEME -->
+            <section class="upload-box">
+                <h2>Bordronu Yükle</h2>
+                <p>PDF, JPG, JPEG veya PNG formatında bordro dosyanı yükle.</p>
+
+                <input id="pdfSec" type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                <button onclick="dosyaSec()">Bordroyu Analiz Et</button>
+
+                <p id="sonuc"></p>
+            </section>
+
+            <!-- ÖZET PANEL -->
+            <section id="ozetPanel" class="panel hidden">
+                <h2>Analiz Özeti</h2>
+
+                <div class="mini-grid">
+                    <div class="mini-card">
+                        <p>Analiz Durumu</p>
+                        <strong id="analizDurumu">Bekleniyor</strong>
+                    </div>
+
+                    <div class="mini-card">
+                        <p>Risk Seviyesi</p>
+                        <strong id="riskSeviyesi">Bekleniyor</strong>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ANA KARTLAR -->
+            <section id="analizKartlari" class="cards hidden">
+                <div class="card">
+                    <p>Net Maaş</p>
+                    <strong>Bulunamadı</strong>
+                </div>
+
+                <div class="card">
+                    <p>Net Fazla Mesai</p>
+                    <strong>Bulunamadı</strong>
+                </div>
+
+                <div class="card">
+                    <p>Prim Toplamı</p>
+                    <strong>Bulunamadı</strong>
+                </div>
+
+                <div class="card">
+                    <p>Toplam Kesinti</p>
+                    <strong>Bulunamadı</strong>
+                </div>
+            </section>
+
+            <!-- DETAY KARTLAR -->
+            <section id="detayKartlari" class="cards hidden">
+                <div class="card detail">
+                    <p>SGK Primi</p>
+                    <strong>Bulunamadı</strong>
+                </div>
+
+                <div class="card detail">
+                    <p>Gelir Vergisi</p>
+                    <strong>Bulunamadı</strong>
+                </div>
+
+                <div class="card detail">
+                    <p>Damga Vergisi</p>
+                    <strong>Bulunamadı</strong>
+                </div>
+
+                <div class="card detail">
+                    <p>BES Tutarı</p>
+                    <strong>Bulunamadı</strong>
+                </div>
+            </section>
+
+            <!-- TOPLAM PANEL -->
+            <section id="toplamPanel" class="panel hidden">
+                <h2>Toplam Sonuç</h2>
+
+                <div class="total-row">
+                    <span>Toplam Yasal Kesinti</span>
+                    <strong id="toplamYasalKesinti">0 TL</strong>
+                </div>
+
+                <div class="total-row">
+                    <span>Toplam Net Ödenen</span>
+                    <strong id="toplamNetOdenen">0 TL</strong>
+                </div>
+
+                <div class="total-row">
+                    <span>Toplam Prim + Mesai</span>
+                    <strong id="toplamEkOdeme">0 TL</strong>
+                </div>
+            </section>
+
+            <!-- SKOR PANEL -->
+            <section id="skorPanel" class="panel hidden">
+                <h2>Bordro Skoru</h2>
+                <div class="score">
+                    <strong id="bordroSkoru">0</strong>
+                    <span>/100</span>
+                </div>
+                <p id="skorAciklama">Analiz bekleniyor.</p>
+            </section>
+
+            <!-- KONTROL PANEL -->
+            <section id="kontrolPanel" class="panel hidden">
+                <h2>Akıllı Kontrol</h2>
+
+                <div class="check-row">
+                    <span id="maasKontrolIcon">⚪</span>
+                    <p id="maasKontrolText">Net maaş kontrolü bekleniyor.</p>
+                </div>
+
+                <div class="check-row">
+                    <span id="mesaiKontrolIcon">⚪</span>
+                    <p id="mesaiKontrolText">Mesai kontrolü bekleniyor.</p>
+                </div>
+
+                <div class="check-row">
+                    <span id="kesintiKontrolIcon">⚪</span>
+                    <p id="kesintiKontrolText">Kesinti kontrolü bekleniyor.</p>
+                </div>
+            </section>
+
+            <!-- YORUM -->
+            <section id="yorum" class="panel hidden">
+                <h2>BordroAI Yorumu</h2>
+                <p></p>
+            </section>
+
+            <button id="raporBtn" class="hidden report-btn" onclick="raporIndir()">
+                PDF Rapor İndir
+            </button>
+
+        </main>
+    </div>
+
+    <script type="module" src="app.js"></script>
 </body>
 </html>
