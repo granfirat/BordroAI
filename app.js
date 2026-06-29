@@ -16,7 +16,9 @@ import {
     serverTimestamp,
     collection,
     addDoc,
-    getDocs
+    getDocs,
+    query,
+    where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* FIREBASE AYARLARI */
@@ -56,7 +58,6 @@ window.addEventListener("load", () => {
 });
 
 /* FIREBASE KULLANICI PANELİ */
-/* FIREBASE KULLANICI PANELİ */
 onAuthStateChanged(auth, async (user) => {
     const authContainer = document.getElementById("authContainer");
     const appContainer = document.getElementById("appContainer");
@@ -71,7 +72,6 @@ onAuthStateChanged(auth, async (user) => {
         kullaniciBilgi.innerText =
             "Hoş geldin, " + (user.displayName || user.email);
 
-        // Kullanıcı Auth'ta var ama Firestore'da yoksa otomatik oluşturur
         await setDoc(doc(db, "kullanicilar", user.uid), {
             uid: user.uid,
             adSoyad: user.displayName || "İsimsiz Kullanıcı",
@@ -80,6 +80,7 @@ onAuthStateChanged(auth, async (user) => {
         }, { merge: true });
 
         await sayaclariGuncelle();
+        await gecmisAnalizleriGetir();
 
     } else {
         aktifKullanici = null;
@@ -117,11 +118,13 @@ window.kayitOl = async function () {
             uid: sonuc.user.uid,
             adSoyad: adSoyad,
             email: sonuc.user.email,
-            createdAt: serverTimestamp()
-        });
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        }, { merge: true });
 
         authMesaj.innerText = "Kayıt başarılı. Giriş yapıldı.";
         await sayaclariGuncelle();
+        await gecmisAnalizleriGetir();
 
     } catch (error) {
         console.error(error);
@@ -156,7 +159,7 @@ window.cikisYap = async function () {
 
 /* HATA MESAJLARI */
 function hataMesaji(kod) {
-    if (kod === "auth/email-already-in-use") return "Bu e-posta zaten kayıtlı.";
+    if (kod === "auth/email-already-in-use") return "Bu e-posta zaten kayıtlı. Giriş Yap butonunu kullan.";
     if (kod === "auth/invalid-email") return "Geçerli bir e-posta girin.";
     if (kod === "auth/weak-password") return "Şifre en az 6 karakter olmalı.";
     if (kod === "auth/invalid-credential") return "E-posta veya şifre hatalı.";
@@ -444,6 +447,7 @@ async function bordroAnalizEt(metin) {
 
     await analizKaydet();
     await sayaclariGuncelle();
+    await gecmisAnalizleriGetir();
 }
 
 /* ANALİZİ FIRESTORE'A KAYDET */
@@ -503,6 +507,113 @@ async function sayaclariGuncelle() {
 
     } catch (error) {
         console.error("Sayaçlar güncellenemedi:", error);
+    }
+}
+
+/* GEÇMİŞ ANALİZLERİ GETİR */
+async function gecmisAnalizleriGetir() {
+    const gecmisListe = document.getElementById("gecmisListe");
+
+    if (!gecmisListe) return;
+
+    if (!aktifKullanici) {
+        gecmisListe.innerHTML =
+            '<p class="empty-text">Geçmiş analizleri görmek için giriş yapmalısınız.</p>';
+        return;
+    }
+
+    try {
+        gecmisListe.innerHTML =
+            '<p class="empty-text">Geçmiş analizler yükleniyor...</p>';
+
+        const analizSorgusu = query(
+            collection(db, "analizler"),
+            where("uid", "==", aktifKullanici.uid)
+        );
+
+        const snapshot = await getDocs(analizSorgusu);
+
+        if (snapshot.empty) {
+            gecmisListe.innerHTML =
+                '<p class="empty-text">Henüz kayıtlı analiziniz yok.</p>';
+            return;
+        }
+
+        const analizler = [];
+
+        snapshot.forEach((docItem) => {
+            analizler.push({
+                id: docItem.id,
+                ...docItem.data()
+            });
+        });
+
+        analizler.sort((a, b) => {
+            const tarihA = a.createdAt?.seconds || 0;
+            const tarihB = b.createdAt?.seconds || 0;
+            return tarihB - tarihA;
+        });
+
+        gecmisListe.innerHTML = "";
+
+        analizler.slice(0, 10).forEach((analiz) => {
+            const tarih = analiz.createdAt
+                ? analiz.createdAt.toDate().toLocaleString("tr-TR")
+                : "Tarih yok";
+
+            let riskClass = "risk-low";
+
+            if (analiz.riskSeviyesi === "Orta") {
+                riskClass = "risk-mid";
+            }
+
+            if (analiz.riskSeviyesi === "Yüksek") {
+                riskClass = "risk-high";
+            }
+
+            const kart = document.createElement("div");
+            kart.className = "history-card";
+
+            kart.innerHTML = `
+                <div class="history-item">
+                    <span>Tarih</span>
+                    <strong>${metinGuvenli(tarih)}</strong>
+                </div>
+
+                <div class="history-item">
+                    <span>Net Maaş</span>
+                    <strong>${metinGuvenli(analiz.netMaas || "Bulunamadı")}</strong>
+                </div>
+
+                <div class="history-item">
+                    <span>Mesai</span>
+                    <strong>${metinGuvenli(analiz.mesai || "Bulunamadı")}</strong>
+                </div>
+
+                <div class="history-item">
+                    <span>Prim</span>
+                    <strong>${metinGuvenli(analiz.prim || "Bulunamadı")}</strong>
+                </div>
+
+                <div class="history-item">
+                    <span>Skor</span>
+                    <strong class="history-score">${metinGuvenli(String(analiz.skor || 0))}/100</strong>
+                </div>
+
+                <div class="history-item">
+                    <span>Risk</span>
+                    <strong class="${riskClass}">${metinGuvenli(analiz.riskSeviyesi || "Bilinmiyor")}</strong>
+                </div>
+            `;
+
+            gecmisListe.appendChild(kart);
+        });
+
+    } catch (error) {
+        console.error("Geçmiş analizler getirilemedi:", error);
+
+        gecmisListe.innerHTML =
+            '<p class="empty-text">Geçmiş analizler yüklenirken hata oluştu.</p>';
     }
 }
 
@@ -642,6 +753,16 @@ function pdfMetni(metin) {
         .replace(/ç/g, "c").replace(/Ç/g, "C");
 }
 
+/* GÜVENLİ HTML METNİ */
+function metinGuvenli(deger) {
+    return String(deger)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 /* PARA BULMA FONKSİYONLARI */
 function netMaasBul(metin) {
     const eslesme =
@@ -775,3 +896,4 @@ function paraSayiyaCevir(deger) {
 /* HTML ONCLICK İÇİN */
 window.dosyaSec = dosyaSec;
 window.raporIndir = raporIndir;
+window.gecmisAnalizleriGetir = gecmisAnalizleriGetir;

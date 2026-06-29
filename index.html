@@ -84,6 +84,22 @@
                 <p id="sonuc"></p>
             </section>
 
+            <!-- GEÇMİŞ ANALİZLER -->
+            <section id="gecmisPanel" class="panel">
+                <div class="panel-title-row">
+                    <div>
+                        <h2>Geçmiş Analizlerim</h2>
+                        <p class="panel-subtitle">Daha önce yaptığın bordro analizleri burada listelenir.</p>
+                    </div>
+
+                    <button class="small-btn" onclick="gecmisAnalizleriGetir()">Yenile</button>
+                </div>
+
+                <div id="gecmisListe" class="history-list">
+                    <p class="empty-text">Geçmiş analizler yükleniyor...</p>
+                </div>
+            </section>
+
             <!-- ÖZET PANEL -->
             <section id="ozetPanel" class="panel hidden">
                 <h2>Analiz Özeti</h2>

@@ -343,6 +343,79 @@ button:hover {
     margin-top: 4px;
 }
 
+/* GEÇMİŞ ANALİZLER */
+.panel-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.panel-subtitle {
+    margin: 4px 0 0;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.small-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-radius: 12px;
+}
+
+.history-list {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.history-card {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 18px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr 1fr 0.7fr 0.8fr;
+    gap: 12px;
+    align-items: center;
+}
+
+.history-item span {
+    display: block;
+    color: #94a3b8;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.history-item strong {
+    color: #e2e8f0;
+    font-size: 14px;
+}
+
+.history-score {
+    color: #22c55e !important;
+    font-size: 18px !important;
+}
+
+.risk-low {
+    color: #22c55e !important;
+}
+
+.risk-mid {
+    color: #facc15 !important;
+}
+
+.risk-high {
+    color: #ef4444 !important;
+}
+
+.empty-text {
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* MOBİL */
 @media (max-width: 900px) {
     .cards {
         grid-template-columns: repeat(2, 1fr);
@@ -356,6 +429,15 @@ button:hover {
     .user-area {
         width: 100%;
         justify-content: space-between;
+    }
+
+    .history-card {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .panel-title-row {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 
@@ -376,5 +458,13 @@ button:hover {
 
     .auth-box {
         padding: 28px;
+    }
+
+    .history-card {
+        grid-template-columns: 1fr;
+    }
+
+    .small-btn {
+        width: 100%;
     }
 }
