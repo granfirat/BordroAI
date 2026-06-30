@@ -1,323 +1,171 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
     <title>BordroAI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="style.css" />
-    <link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#22c55e" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="BordroAI" />
-<link rel="apple-touch-icon" href="/icons/icon-192.png" />
-    <!-- OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#22c55e">
+    <meta name="background-color" content="#020617">
 
-    <!-- PDF OKUMA -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="BordroAI">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- PDF RAPOR -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="apple-touch-icon" href="/icon-192.png">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css?v=10">
 </head>
+
 <body>
 
     <!-- AÇILIŞ EKRANI -->
     <div id="splash-screen">
         <div class="splash-logo">B</div>
         <h1>BordroAI</h1>
-        <p>Yapay zekâ destekli bordro analiz sistemi</p>
+        <p>Yapay Zekâ Destekli Bordro Analizi</p>
     </div>
 
-    <!-- LANDING + GİRİŞ / KAYIT -->
-    <div id="authContainer" class="auth-container">
-        <div class="landing-wrapper">
+    <!-- GİRİŞ / KAYIT ALANI -->
+    <div id="auth-container" class="auth-container">
+        <div class="auth-box">
+            <div class="brand-area">
+                <div class="brand-logo">B</div>
+                <h1>BordroAI</h1>
+                <p>Yapay Zekâ Destekli Bordro Analizi</p>
+            </div>
 
-            <section class="landing-left">
-                <div class="brand-row">
-                    <div class="logo-circle">B</div>
-                    <div>
-                        <h1>BordroAI</h1>
-                        <p>Yapay zekâ destekli bordro analiz sistemi</p>
-                    </div>
-                </div>
+            <div class="auth-tabs">
+                <button id="tabGirisBtn" class="active" onclick="tabGoster('giris')">Giriş Yap</button>
+                <button id="tabKayitBtn" onclick="tabGoster('kayit')">Kayıt Ol</button>
+            </div>
 
-                <h2>Bordronu yükle, maaşını saniyeler içinde kontrol et.</h2>
+            <!-- GİRİŞ -->
+            <div id="giris-panel" class="auth-panel">
+                <label>E-posta</label>
+                <input id="girisEmail" type="email" placeholder="ornek@mail.com">
 
-                <p class="landing-text">
-                    BordroAI; PDF, JPG ve PNG bordrolarını OCR ile okuyarak net maaş,
-                    fazla mesai, prim, kesinti ve vergi kalemlerini analiz eder.
-                    Sonuçlarını güvenli hesabında saklar ve PDF rapor olarak indirmeni sağlar.
+                <label>Şifre</label>
+                <input id="girisSifre" type="password" placeholder="Şifren">
+
+                <button class="primary-btn" onclick="girisYap()">Giriş Yap</button>
+
+                <p class="mini-info">
+                    E-posta doğrulaması yapmadan panele giriş yapılamaz.
                 </p>
+            </div>
 
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <span>📄</span>
-                        <strong>PDF / Görsel Analizi</strong>
-                        <p>Bordro dosyanı yükle, sistem otomatik okusun.</p>
-                    </div>
+            <!-- KAYIT -->
+            <div id="kayit-panel" class="auth-panel hidden">
+                <label>Ad Soyad</label>
+                <input id="kayitAdSoyad" type="text" placeholder="Ad Soyad">
 
-                    <div class="feature-card">
-                        <span>🔐</span>
-                        <strong>Güvenli Hesap</strong>
-                        <p>Analizlerin sadece kendi hesabında görünür.</p>
-                    </div>
+                <label>E-posta</label>
+                <input id="kayitEmail" type="email" placeholder="ornek@mail.com">
 
-                    <div class="feature-card">
-                        <span>📊</span>
-                        <strong>Akıllı Bordro Skoru</strong>
-                        <p>Maaş, mesai ve kesinti kalemlerini puanlar.</p>
-                    </div>
+                <label>Şifre</label>
+                <input id="kayitSifre" type="password" placeholder="En az 6 karakter">
 
-                    <div class="feature-card">
-                        <span>⬇️</span>
-                        <strong>PDF Rapor</strong>
-                        <p>Analiz sonucunu rapor olarak indirebilirsin.</p>
-                    </div>
-                </div>
+                <button class="primary-btn" onclick="kayitOl()">Kayıt Ol</button>
 
-                <div class="trust-row">
-                    <div>
-                        <strong>OCR</strong>
-                        <span>PDF & Görsel okuma</span>
-                    </div>
-
-                    <div>
-                        <strong>Firebase</strong>
-                        <span>Güvenli giriş sistemi</span>
-                    </div>
-
-                    <div>
-                        <strong>BordroAI</strong>
-                        <span>Kişisel analiz geçmişi</span>
-                    </div>
-                </div>
-            </section>
-
-            <section class="auth-box">
-                <div class="auth-badge">Erken erişim</div>
-
-                <h2>Hesabına giriş yap</h2>
-                <p class="auth-info">
-                    Bordronu analiz etmek ve geçmiş raporlarını görmek için giriş yap veya ücretsiz hesap oluştur.
+                <p class="mini-info">
+                    Kayıt sonrası mailine doğrulama linki gönderilir.
                 </p>
+            </div>
 
-                <input id="adSoyad" type="text" placeholder="Ad Soyad" />
-                <input id="email" type="email" placeholder="E-posta" />
-                <input id="sifre" type="password" placeholder="Şifre" />
-
-                <button onclick="kayitOl()">Ücretsiz Kayıt Ol</button>
-                <button class="secondary-btn" onclick="girisYap()">Giriş Yap</button>
-
-                <p id="authMesaj"></p>
-
-                <p class="privacy-note">
-                    Bordro verilerin hesabına bağlı olarak saklanır. Başka kullanıcılar analizlerini göremez.
-                </p>
-            </section>
-
+            <p id="authMesaj" class="message"></p>
         </div>
     </div>
 
-    <!-- UYGULAMA ALANI -->
-    <div id="appContainer" class="hidden">
+    <!-- UYGULAMA ANA PANELİ -->
+    <div id="app-container" class="app-container hidden">
 
-        <header class="topbar">
+        <header class="app-header">
             <div>
                 <h1>BordroAI</h1>
-                <p>Yapay zekâ destekli bordro analiz sistemi</p>
+                <p>Hoş geldin, <span id="kullaniciAdi">Kullanıcı</span></p>
             </div>
 
-            <div class="user-area">
-                <span id="kullaniciBilgi">Hoş geldin</span>
-                <button onclick="cikisYap()">Çıkış Yap</button>
-            </div>
+            <button class="logout-btn" onclick="cikisYap()">Çıkış</button>
         </header>
 
-        <main class="container">
+        <!-- KULLANICI PANELİ -->
+        <section class="dashboard-grid">
+            <div class="dashboard-card big">
+                <span>Hesap Sahibi</span>
+                <strong id="panelAdSoyad">-</strong>
+                <small id="panelEmail">-</small>
+            </div>
 
-            <section class="stats-grid">
-                <div class="stat-card">
-                    <span class="stat-number" id="toplamKullanici">0</span>
-                    <p>Hesap Aktif</p>
-                </div>
+            <div class="dashboard-card">
+                <span>Mail Durumu</span>
+                <strong id="panelDogrulama">-</strong>
+            </div>
 
-                <div class="stat-card">
-                    <span class="stat-number" id="toplamAnaliz">0</span>
-                    <p>Benim Analizlerim</p>
-                </div>
-            </section>
+            <div class="dashboard-card">
+                <span>Benim Analizim</span>
+                <strong id="panelAnalizSayisi">0</strong>
+            </div>
 
-            <section class="upload-box">
-                <h2>Bordronu Yükle</h2>
-                <p>PDF, JPG, JPEG veya PNG formatında bordro dosyanı yükle.</p>
+            <div class="dashboard-card">
+                <span>Toplam Kullanıcı</span>
+                <strong id="toplamKullanici">-</strong>
+            </div>
 
-                <input id="pdfSec" type="file" accept=".pdf,.jpg,.jpeg,.png" />
-                <button onclick="dosyaSec()">Bordroyu Analiz Et</button>
+            <div class="dashboard-card">
+                <span>Toplam Analiz</span>
+                <strong id="toplamAnaliz">-</strong>
+            </div>
+        </section>
 
-                <p id="sonuc"></p>
-            </section>
+        <!-- DOSYA YÜKLEME -->
+        <section class="upload-card">
+            <h2>Bordro Analizi</h2>
+            <p>PDF, JPG veya PNG bordro dosyanı yükle. BordroAI metni okuyup temel kalemleri analiz eder.</p>
 
-            <section id="gecmisPanel" class="panel">
-                <div class="panel-title-row">
-                    <div>
-                        <h2>Geçmiş Analizlerim</h2>
-                        <p class="panel-subtitle">Daha önce yaptığın bordro analizleri burada listelenir.</p>
-                    </div>
+            <input id="pdfSec" type="file" accept=".pdf,.jpg,.jpeg,.png">
 
-                    <button class="small-btn" onclick="gecmisAnalizleriGetir()">Yenile</button>
-                </div>
+            <div class="button-row">
+                <button class="primary-btn" onclick="dosyaSec()">Bordroyu Analiz Et</button>
+                <button class="secondary-btn" onclick="temizle()">Temizle</button>
+            </div>
 
-                <div id="gecmisListe" class="history-list">
-                    <p class="empty-text">Geçmiş analizler yükleniyor...</p>
-                </div>
-            </section>
+            <p id="durumMesaji" class="status-text"></p>
+        </section>
 
-            <section id="ozetPanel" class="panel hidden">
-                <h2>Analiz Özeti</h2>
+        <!-- SONUÇ -->
+        <section id="sonucKart" class="result-card hidden">
+            <h2>Analiz Sonucu</h2>
+            <div id="sonuc"></div>
 
-                <div class="mini-grid">
-                    <div class="mini-card">
-                        <p>Analiz Durumu</p>
-                        <strong id="analizDurumu">Bekleniyor</strong>
-                    </div>
+            <button class="primary-btn" onclick="raporIndir()">PDF Rapor İndir</button>
+        </section>
 
-                    <div class="mini-card">
-                        <p>Risk Seviyesi</p>
-                        <strong id="riskSeviyesi">Bekleniyor</strong>
-                    </div>
-                </div>
-            </section>
+        <!-- GEÇMİŞ ANALİZLER -->
+        <section class="history-card">
+            <div class="section-title">
+                <h2>Geçmiş Analizlerim</h2>
+                <button class="small-btn" onclick="gecmisAnalizleriYukle()">Yenile</button>
+            </div>
 
-            <section id="analizKartlari" class="cards hidden">
-                <div class="card">
-                    <p>Net Maaş</p>
-                    <strong>Bulunamadı</strong>
-                </div>
+            <div id="gecmisListe">
+                <p class="empty-text">Henüz analiz bulunmuyor.</p>
+            </div>
+        </section>
 
-                <div class="card">
-                    <p>Net Fazla Mesai</p>
-                    <strong>Bulunamadı</strong>
-                </div>
-
-                <div class="card">
-                    <p>Prim Toplamı</p>
-                    <strong>Bulunamadı</strong>
-                </div>
-
-                <div class="card">
-                    <p>Toplam Kesinti</p>
-                    <strong>Bulunamadı</strong>
-                </div>
-            </section>
-
-            <section id="detayKartlari" class="cards hidden">
-                <div class="card detail">
-                    <p>SGK Primi</p>
-                    <strong>Bulunamadı</strong>
-                </div>
-
-                <div class="card detail">
-                    <p>Gelir Vergisi</p>
-                    <strong>Bulunamadı</strong>
-                </div>
-
-                <div class="card detail">
-                    <p>Damga Vergisi</p>
-                    <strong>Bulunamadı</strong>
-                </div>
-
-                <div class="card detail">
-                    <p>BES Tutarı</p>
-                    <strong>Bulunamadı</strong>
-                </div>
-            </section>
-
-            <section id="toplamPanel" class="panel hidden">
-                <h2>Toplam Sonuç</h2>
-
-                <div class="total-row">
-                    <span>Toplam Yasal Kesinti</span>
-                    <strong id="toplamYasalKesinti">0 TL</strong>
-                </div>
-
-                <div class="total-row">
-                    <span>Toplam Net Ödenen</span>
-                    <strong id="toplamNetOdenen">0 TL</strong>
-                </div>
-
-                <div class="total-row">
-                    <span>Toplam Prim + Mesai</span>
-                    <strong id="toplamEkOdeme">0 TL</strong>
-                </div>
-            </section>
-
-            <section id="skorPanel" class="panel hidden">
-                <h2>Bordro Skoru</h2>
-                <div class="score">
-                    <strong id="bordroSkoru">0</strong>
-                    <span>/100</span>
-                </div>
-                <p id="skorAciklama">Analiz bekleniyor.</p>
-            </section>
-
-            <section id="kontrolPanel" class="panel hidden">
-                <h2>Akıllı Kontrol</h2>
-
-                <div class="check-row">
-                    <span id="maasKontrolIcon">⚪</span>
-                    <p id="maasKontrolText">Net maaş kontrolü bekleniyor.</p>
-                </div>
-
-                <div class="check-row">
-                    <span id="mesaiKontrolIcon">⚪</span>
-                    <p id="mesaiKontrolText">Mesai kontrolü bekleniyor.</p>
-                </div>
-
-                <div class="check-row">
-                    <span id="kesintiKontrolIcon">⚪</span>
-                    <p id="kesintiKontrolText">Kesinti kontrolü bekleniyor.</p>
-                </div>
-            </section>
-
-            <section id="yorum" class="panel hidden">
-                <h2>BordroAI Yorumu</h2>
-                <p></p>
-            </section>
-
-            <button id="raporBtn" class="hidden report-btn" onclick="raporIndir()">
-                PDF Rapor İndir
-            </button>
-
-        </main>
     </div>
-<script>
-    if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-            navigator.serviceWorker
-                .register("/service-worker.js")
-                .then(() => console.log("BordroAI PWA aktif."))
-                .catch((error) => console.error("PWA kayıt hatası:", error));
-        });
-    }
-</script>
 
-    <script type="module" src="app.js"></script>
-<script>
-    if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-            navigator.serviceWorker
-                .register("/sw.js")
-                .then(() => {
-                    console.log("BordroAI service worker aktif.");
-                })
-                .catch(error => {
-                    console.log("Service worker hatası:", error);
-                });
-        });
-    }
-</script>
+    <!-- KÜTÜPHANELER -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- APP -->
+    <script type="module" src="app.js?v=10"></script>
 
 </body>
 </html>
