@@ -482,7 +482,7 @@ async function pdfOcrOku(dosya) {
         durumYaz(`PDF OCR okunuyor... Sayfa ${i}/${pdf.numPages}`);
 
         const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 1.6 });
+        const viewport = page.getViewport({ scale: 1.8 });
 
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
@@ -509,129 +509,406 @@ async function gorselOku(dosya) {
     return result.data.text;
 }
 
-/* ANALİZ MOTORU */
+/* GÜÇLENDİRİLMİŞ ANALİZ MOTORU */
 function analizEt(metin, dosyaAdi) {
+    const satirlar = metin
+        .split(/\r?\n/)
+        .map(satir => satir.replace(/\s+/g, " ").trim())
+        .filter(satir => satir.length > 0);
+
     const temizMetin = metin
+        .replace(/₺/g, " TL ")
         .replace(/\s+/g, " ")
-        .replace(/₺/g, "TL")
         .trim();
 
-    const netMaas = kalemBul(temizMetin, [
-        /net\s*ödenen\s*tutar[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /net\s*ödenecek\s*tutar[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /ödenecek\s*net[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /net\s*maaş[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /net\s*ücret[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /net[^\d]{0,40}([\d.\s]+,\d{2})/i
-    ]);
+    const bulunanTutarlar = paraListesiBul(temizMetin);
 
-    const brutUcret = kalemBul(temizMetin, [
-        /brüt\s*ücret[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /brüt\s*maaş[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /brut\s*ücret[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /brut\s*maaş[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /brüt[^\d]{0,40}([\d.\s]+,\d{2})/i,
-        /brut[^\d]{0,40}([\d.\s]+,\d{2})/i
-    ]);
+    const netMaas = alanBul(temizMetin, satirlar, [
+        "net ödenen tutar",
+        "net odenen tutar",
+        "net ödenecek tutar",
+        "net odenecek tutar",
+        "ödenecek net",
+        "odenecek net",
+        "ödenecek tutar",
+        "odenecek tutar",
+        "ödenen tutar",
+        "odenen tutar",
+        "net ödeme",
+        "net odeme",
+        "net maaş",
+        "net maas",
+        "net ücret",
+        "net ucret",
+        "banka ödeme",
+        "banka odeme",
+        "banka net",
+        "hesaba yatan",
+        "ele geçen",
+        "ele gecen"
+    ], "largest");
 
-    const toplamKesinti = kalemBul(temizMetin, [
-        /toplam\s*kesinti[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /kesintiler\s*toplamı[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /kesinti\s*toplamı[^\d]{0,60}([\d.\s]+,\d{2})/i
-    ]);
+    const brutUcret = alanBul(temizMetin, satirlar, [
+        "brüt ücret",
+        "brut ucret",
+        "brüt maaş",
+        "brut maas",
+        "brüt kazanç",
+        "brut kazanc",
+        "toplam brüt",
+        "toplam brut",
+        "aylık ücret",
+        "aylik ucret",
+        "normal ücret",
+        "normal ucret",
+        "normal kazanç",
+        "normal kazanc",
+        "esas kazanç",
+        "esas kazanc",
+        "prime esas kazanç",
+        "prime esas kazanc",
+        "sgk matrahı",
+        "sgk matrahi"
+    ], "largest");
 
-    const sgkKesintisi = kalemBul(temizMetin, [
-        /sgk\s*işçi[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /sgk\s*primi[^\d]{0,60}([\d.\s]+,\d{2})/i,
-        /sosyal\s*güvenlik[^\d]{0,60}([\d.\s]+,\d{2})/i
-    ]);
+    const toplamKazanc = alanBul(temizMetin, satirlar, [
+        "toplam kazanç",
+        "toplam kazanc",
+        "kazançlar toplamı",
+        "kazanclar toplami",
+        "brüt kazanç toplamı",
+        "brut kazanc toplami",
+        "hakediş toplamı",
+        "hakedis toplami",
+        "ödeme toplamı",
+        "odeme toplami"
+    ], "largest");
 
-    const gelirVergisi = kalemBul(temizMetin, [
-        /gelir\s*vergisi[^\d]{0,60}([\d.\s]+,\d{2})/i
-    ]);
+    const toplamKesinti = alanBul(temizMetin, satirlar, [
+        "toplam kesinti",
+        "kesinti toplamı",
+        "kesinti toplami",
+        "kesintiler toplamı",
+        "kesintiler toplami",
+        "yasal kesinti",
+        "yasal kesintiler",
+        "toplam yasal kesinti",
+        "kesilen toplam"
+    ], "largest");
 
-    const damgaVergisi = kalemBul(temizMetin, [
-        /damga\s*vergisi[^\d]{0,60}([\d.\s]+,\d{2})/i
-    ]);
+    const sgkKesintisi = alanBul(temizMetin, satirlar, [
+        "sgk işçi",
+        "sgk isci",
+        "sgk primi işçi",
+        "sgk primi isci",
+        "sgk işçi payı",
+        "sgk isci payi",
+        "sigorta primi işçi",
+        "sigorta primi isci",
+        "sosyal güvenlik",
+        "sosyal guvenlik",
+        "malullük yaşlılık ölüm",
+        "malulluk yaslilik olum",
+        "malullük",
+        "malulluk"
+    ], "last");
 
-    const tumParalar = paraListesiBul(temizMetin);
+    const issizlikKesintisi = alanBul(temizMetin, satirlar, [
+        "işsizlik işçi",
+        "issizlik isci",
+        "işsizlik sigortası işçi",
+        "issizlik sigortasi isci",
+        "işsizlik primi",
+        "issizlik primi"
+    ], "last");
 
-    let tahminiNet = netMaas;
+    const gelirVergisi = alanBul(temizMetin, satirlar, [
+        "gelir vergisi",
+        "gelir vergisi kesintisi",
+        "gv kesintisi",
+        "gelir vergisi tutarı",
+        "gelir vergisi tutari",
+        "hesaplanan gelir vergisi",
+        "ödenecek gelir vergisi",
+        "odenecek gelir vergisi"
+    ], "last");
 
-    if (!tahminiNet && tumParalar.length > 0) {
-        tahminiNet = enMantikliNetTahmin(tumParalar);
+    const damgaVergisi = alanBul(temizMetin, satirlar, [
+        "damga vergisi",
+        "damga vergisi kesintisi",
+        "dv kesintisi",
+        "damga vergisi tutarı",
+        "damga vergisi tutari"
+    ], "last");
+
+    const agi = alanBul(temizMetin, satirlar, [
+        "agi",
+        "asgari geçim indirimi",
+        "asgari gecim indirimi"
+    ], "last");
+
+    const fazlaMesai = alanBul(temizMetin, satirlar, [
+        "fazla mesai",
+        "mesai ücreti",
+        "mesai ucreti",
+        "fazla çalışma",
+        "fazla calisma",
+        "resmi tatil",
+        "bayram mesaisi",
+        "hafta tatili"
+    ], "largest");
+
+    const primIkramiye = alanBul(temizMetin, satirlar, [
+        "prim",
+        "ikramiye",
+        "performans",
+        "ek ödeme",
+        "ek odeme",
+        "bonus"
+    ], "largest");
+
+    const yolYardimi = alanBul(temizMetin, satirlar, [
+        "yol yardımı",
+        "yol yardimi",
+        "yol ücreti",
+        "yol ucreti",
+        "ulaşım",
+        "ulasim"
+    ], "largest");
+
+    const yemekYardimi = alanBul(temizMetin, satirlar, [
+        "yemek yardımı",
+        "yemek yardimi",
+        "yemek ücreti",
+        "yemek ucreti"
+    ], "largest");
+
+    let finalNet = netMaas;
+    let finalBrut = brutUcret || toplamKazanc;
+
+    if (!finalNet) {
+        finalNet = tahminiNetBul(bulunanTutarlar, finalBrut);
     }
+
+    if (!finalBrut) {
+        finalBrut = tahminiBrutBul(bulunanTutarlar, finalNet);
+    }
+
+    const tahminiToplamKesinti = toplamKesinti || kesintiToplamiTahminEt([
+        sgkKesintisi,
+        issizlikKesintisi,
+        gelirVergisi,
+        damgaVergisi
+    ]);
 
     let ozet = "Bordro okundu.";
 
     if (netMaas) {
         ozet = `Net ödeme ${netMaas} TL olarak bulundu.`;
-    } else if (tahminiNet) {
-        ozet = `Net ödeme alanı direkt yakalanamadı. Tahmini net tutar ${tahminiNet} TL olabilir.`;
-    } else if (tumParalar.length > 0) {
-        ozet = "Bordro okundu fakat net ödeme alanı net yakalanamadı. Bulunan tutarlar listelendi.";
+    } else if (finalNet) {
+        ozet = `Net ödeme alanı direkt yakalanamadı. Tahmini net tutar ${finalNet} TL olabilir.`;
     } else {
-        ozet = "Bordro okundu fakat otomatik tutar yakalanamadı.";
+        ozet = "Bordro okundu fakat net ödeme alanı yakalanamadı.";
     }
 
     return {
         dosyaAdi,
         ozet,
-        netMaas: tahminiNet || "-",
-        brutUcret: brutUcret || "-",
-        toplamKesinti: toplamKesinti || "-",
+        netMaas: finalNet || "-",
+        brutUcret: finalBrut || "-",
+        toplamKesinti: tahminiToplamKesinti || "-",
         sgkKesintisi: sgkKesintisi || "-",
+        issizlikKesintisi: issizlikKesintisi || "-",
         gelirVergisi: gelirVergisi || "-",
         damgaVergisi: damgaVergisi || "-",
-        bulunanTutarlar: tumParalar.slice(0, 10),
+        agi: agi || "-",
+        fazlaMesai: fazlaMesai || "-",
+        primIkramiye: primIkramiye || "-",
+        yolYardimi: yolYardimi || "-",
+        yemekYardimi: yemekYardimi || "-",
+        bulunanTutarlar: bulunanTutarlar.slice(0, 12),
         createdAtLocal: new Date().toLocaleString("tr-TR")
     };
 }
 
-function kalemBul(metin, kaliplar) {
-    for (const kalip of kaliplar) {
-        const eslesme = metin.match(kalip);
+/* ALAN BULMA MOTORU */
+function alanBul(tamMetin, satirlar, etiketler, secim = "last") {
+    const normalEtiketler = etiketler.map(etiket => normalizeAra(etiket));
 
-        if (eslesme && eslesme[1]) {
-            return eslesme[1].replace(/\s/g, "");
+    for (let i = 0; i < satirlar.length; i++) {
+        const satir = satirlar[i];
+        const normalSatir = normalizeAra(satir);
+
+        const eslesti = normalEtiketler.some(etiket => normalSatir.includes(etiket));
+
+        if (eslesti) {
+            let paralar = paraListesiBul(satir);
+
+            if (paralar.length === 0 && satirlar[i + 1]) {
+                paralar = paralar.concat(paraListesiBul(satirlar[i + 1]));
+            }
+
+            if (paralar.length === 0 && satirlar[i + 2]) {
+                paralar = paralar.concat(paraListesiBul(satirlar[i + 2]));
+            }
+
+            paralar = benzersizParalar(paralar);
+
+            if (paralar.length > 0) {
+                return paraSec(paralar, secim);
+            }
+        }
+    }
+
+    const normalTamMetin = normalizeAra(tamMetin);
+
+    for (const etiket of normalEtiketler) {
+        const index = normalTamMetin.indexOf(etiket);
+
+        if (index !== -1) {
+            const parca = normalTamMetin.slice(index, index + 260);
+            const paralar = paraListesiBul(parca);
+
+            if (paralar.length > 0) {
+                return paraSec(paralar, secim);
+            }
         }
     }
 
     return "";
 }
 
-function paraListesiBul(metin) {
-    const eslesmeler = metin.match(/\d{1,3}(?:\.\d{3})*,\d{2}/g) || [];
-    return [...new Set(eslesmeler)];
-}
+function paraSec(paralar, secim) {
+    const temizler = benzersizParalar(paralar);
 
-function enMantikliNetTahmin(tutarlar) {
-    const sayilar = tutarlar
-        .map(tutar => {
-            const sayi = Number(
-                tutar
-                    .replace(/\./g, "")
-                    .replace(",", ".")
-            );
+    if (temizler.length === 0) return "";
 
-            return {
-                orijinal: tutar,
-                sayi
-            };
-        })
-        .filter(item => !isNaN(item.sayi) && item.sayi > 0);
-
-    if (!sayilar.length) return "";
-
-    const mantikli = sayilar
-        .filter(item => item.sayi >= 5000 && item.sayi <= 250000)
-        .sort((a, b) => b.sayi - a.sayi);
-
-    if (mantikli.length) {
-        return mantikli[0].orijinal;
+    if (secim === "largest") {
+        return temizler
+            .map(tutar => ({ tutar, sayi: paraSayiyaCevir(tutar) }))
+            .filter(item => !isNaN(item.sayi))
+            .sort((a, b) => b.sayi - a.sayi)[0].tutar;
     }
 
-    return sayilar.sort((a, b) => b.sayi - a.sayi)[0].orijinal;
+    if (secim === "smallest") {
+        return temizler
+            .map(tutar => ({ tutar, sayi: paraSayiyaCevir(tutar) }))
+            .filter(item => !isNaN(item.sayi) && item.sayi > 0)
+            .sort((a, b) => a.sayi - b.sayi)[0]?.tutar || "";
+    }
+
+    return temizler[temizler.length - 1];
+}
+
+function paraListesiBul(metin) {
+    const eslesmeler = String(metin).match(/\d{1,3}(?:[.\s]\d{3})*,\d{2}/g) || [];
+
+    return benzersizParalar(
+        eslesmeler.map(tutar => tutar.replace(/\s/g, ""))
+    );
+}
+
+function benzersizParalar(paralar) {
+    return [...new Set(
+        paralar
+            .map(tutar => String(tutar).replace(/\s/g, "").trim())
+            .filter(Boolean)
+    )];
+}
+
+function paraSayiyaCevir(tutar) {
+    if (!tutar || tutar === "-") return NaN;
+
+    return Number(
+        String(tutar)
+            .replace(/\./g, "")
+            .replace(",", ".")
+            .replace(/[^\d.]/g, "")
+    );
+}
+
+function paraFormatla(sayi) {
+    if (isNaN(sayi)) return "";
+
+    return sayi.toLocaleString("tr-TR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function normalizeAra(metin) {
+    return String(metin)
+        .toLocaleLowerCase("tr-TR")
+        .replace(/ç/g, "c")
+        .replace(/ğ/g, "g")
+        .replace(/ı/g, "i")
+        .replace(/ö/g, "o")
+        .replace(/ş/g, "s")
+        .replace(/ü/g, "u")
+        .replace(/â/g, "a")
+        .replace(/î/g, "i")
+        .replace(/û/g, "u")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function tahminiNetBul(tutarlar, brut) {
+    if (!tutarlar || tutarlar.length === 0) return "";
+
+    const brutSayi = paraSayiyaCevir(brut);
+
+    const sayilar = tutarlar
+        .map(tutar => ({ tutar, sayi: paraSayiyaCevir(tutar) }))
+        .filter(item => !isNaN(item.sayi) && item.sayi >= 1000);
+
+    if (sayilar.length === 0) return "";
+
+    if (!isNaN(brutSayi) && brutSayi > 0) {
+        const bruttenBuyukler = sayilar
+            .filter(item => item.sayi >= brutSayi * 0.35 && item.sayi <= brutSayi * 2.5)
+            .sort((a, b) => b.sayi - a.sayi);
+
+        if (bruttenBuyukler.length > 0) {
+            return bruttenBuyukler[0].tutar;
+        }
+    }
+
+    return sayilar.sort((a, b) => b.sayi - a.sayi)[0].tutar;
+}
+
+function tahminiBrutBul(tutarlar, net) {
+    if (!tutarlar || tutarlar.length === 0) return "";
+
+    const netSayi = paraSayiyaCevir(net);
+
+    const sayilar = tutarlar
+        .map(tutar => ({ tutar, sayi: paraSayiyaCevir(tutar) }))
+        .filter(item => !isNaN(item.sayi) && item.sayi >= 1000);
+
+    if (sayilar.length === 0) return "";
+
+    if (!isNaN(netSayi) && netSayi > 0) {
+        const adaylar = sayilar
+            .filter(item => item.sayi !== netSayi && item.sayi >= netSayi * 0.45 && item.sayi <= netSayi * 1.8)
+            .sort((a, b) => b.sayi - a.sayi);
+
+        if (adaylar.length > 0) {
+            return adaylar[0].tutar;
+        }
+    }
+
+    return sayilar.sort((a, b) => b.sayi - a.sayi)[0].tutar;
+}
+
+function kesintiToplamiTahminEt(kalemler) {
+    const toplam = kalemler
+        .map(paraSayiyaCevir)
+        .filter(sayi => !isNaN(sayi) && sayi > 0)
+        .reduce((a, b) => a + b, 0);
+
+    if (toplam <= 0) return "";
+
+    return paraFormatla(toplam);
 }
 
 /* SONUÇ GÖSTER */
@@ -658,7 +935,7 @@ function sonucuGoster(analiz) {
             </div>
 
             <div class="result-line">
-                <span>Brüt Ücret</span>
+                <span>Brüt Ücret / Kazanç</span>
                 <strong>${tutarYaz(analiz.brutUcret)}</strong>
             </div>
 
@@ -673,6 +950,11 @@ function sonucuGoster(analiz) {
             </div>
 
             <div class="result-line">
+                <span>İşsizlik Kesintisi</span>
+                <strong>${tutarYaz(analiz.issizlikKesintisi)}</strong>
+            </div>
+
+            <div class="result-line">
                 <span>Gelir Vergisi</span>
                 <strong>${tutarYaz(analiz.gelirVergisi)}</strong>
             </div>
@@ -680,6 +962,26 @@ function sonucuGoster(analiz) {
             <div class="result-line">
                 <span>Damga Vergisi</span>
                 <strong>${tutarYaz(analiz.damgaVergisi)}</strong>
+            </div>
+
+            <div class="result-line">
+                <span>Fazla Mesai</span>
+                <strong>${tutarYaz(analiz.fazlaMesai)}</strong>
+            </div>
+
+            <div class="result-line">
+                <span>Prim / İkramiye</span>
+                <strong>${tutarYaz(analiz.primIkramiye)}</strong>
+            </div>
+
+            <div class="result-line">
+                <span>Yol Yardımı</span>
+                <strong>${tutarYaz(analiz.yolYardimi)}</strong>
+            </div>
+
+            <div class="result-line">
+                <span>Yemek Yardımı</span>
+                <strong>${tutarYaz(analiz.yemekYardimi)}</strong>
             </div>
         </div>
 
@@ -711,10 +1013,16 @@ async function analiziKaydet(analiz, hamMetin) {
         brutUcret: analiz.brutUcret,
         toplamKesinti: analiz.toplamKesinti,
         sgkKesintisi: analiz.sgkKesintisi,
+        issizlikKesintisi: analiz.issizlikKesintisi,
         gelirVergisi: analiz.gelirVergisi,
         damgaVergisi: analiz.damgaVergisi,
+        agi: analiz.agi,
+        fazlaMesai: analiz.fazlaMesai,
+        primIkramiye: analiz.primIkramiye,
+        yolYardimi: analiz.yolYardimi,
+        yemekYardimi: analiz.yemekYardimi,
         bulunanTutarlar: analiz.bulunanTutarlar,
-        hamMetinKisa: hamMetin.slice(0, 2500),
+        hamMetinKisa: hamMetin.slice(0, 4000),
         createdAt: serverTimestamp()
     });
 
@@ -820,11 +1128,16 @@ window.raporIndir = function () {
         ["Tarih", sonAnaliz.createdAtLocal],
         ["Ozet", sonAnaliz.ozet],
         ["Net Maas", sonAnaliz.netMaas + " TL"],
-        ["Brut Ucret", sonAnaliz.brutUcret + " TL"],
+        ["Brut Ucret / Kazanc", sonAnaliz.brutUcret + " TL"],
         ["Toplam Kesinti", sonAnaliz.toplamKesinti + " TL"],
         ["SGK Kesintisi", sonAnaliz.sgkKesintisi + " TL"],
+        ["Issizlik Kesintisi", sonAnaliz.issizlikKesintisi + " TL"],
         ["Gelir Vergisi", sonAnaliz.gelirVergisi + " TL"],
-        ["Damga Vergisi", sonAnaliz.damgaVergisi + " TL"]
+        ["Damga Vergisi", sonAnaliz.damgaVergisi + " TL"],
+        ["Fazla Mesai", sonAnaliz.fazlaMesai + " TL"],
+        ["Prim / Ikramiye", sonAnaliz.primIkramiye + " TL"],
+        ["Yol Yardimi", sonAnaliz.yolYardimi + " TL"],
+        ["Yemek Yardimi", sonAnaliz.yemekYardimi + " TL"]
     ];
 
     satirlar.forEach(([baslik, deger]) => {
