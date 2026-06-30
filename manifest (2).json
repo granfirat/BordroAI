@@ -1,0 +1,26 @@
+{
+  "name": "BordroAI - Yapay Zekâ Destekli Bordro Analizi",
+  "short_name": "BordroAI",
+  "description": "BordroAI ile maaş bordronu yükle, analiz et ve raporla.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#22c55e",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

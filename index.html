@@ -304,5 +304,20 @@
 </script>
 
     <script type="module" src="app.js"></script>
+<script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker
+                .register("/sw.js")
+                .then(() => {
+                    console.log("BordroAI service worker aktif.");
+                })
+                .catch(error => {
+                    console.log("Service worker hatası:", error);
+                });
+        });
+    }
+</script>
+
 </body>
 </html>
