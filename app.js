@@ -139,17 +139,24 @@ window.kayitOl = async function () {
             displayName: adSoyad
         });
 
-        await setDoc(doc(db, "users", user.uid), {
-            uid: user.uid,
-            adSoyad: adSoyad,
-            email: email,
-            emailVerified: false,
-            analizSayisi: 0,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-        }, { merge: true });
-
+        // ÖNCE DOĞRULAMA MAİLİ GÖNDERİYORUZ
         await sendEmailVerification(user);
+
+        // SONRA FIRESTORE KAYDI DENİYORUZ
+        // Firestore izin hatası olsa bile mail gönderilmiş olacak.
+        try {
+            await setDoc(doc(db, "users", user.uid), {
+                uid: user.uid,
+                adSoyad: adSoyad,
+                email: email,
+                emailVerified: false,
+                analizSayisi: 0,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+        } catch (firestoreError) {
+            console.log("Firestore kayıt hatası ama doğrulama maili gönderildi:", firestoreError);
+        }
 
         await signOut(auth);
 
@@ -160,7 +167,7 @@ window.kayitOl = async function () {
         tabGoster("giris");
 
         mesajYaz(
-            "Kayıt başarılı. Mailine doğrulama linki gönderdik. Mailini doğruladıktan sonra giriş yap.",
+            "Kayıt başarılı. Doğrulama maili gönderildi. Spam / Gereksiz / Tanıtımlar klasörünü de kontrol et.",
             "success"
         );
 
@@ -168,11 +175,13 @@ window.kayitOl = async function () {
         console.error("Kayıt hatası:", error);
 
         if (error.code === "auth/email-already-in-use") {
-            mesajYaz("Bu e-posta adresi zaten kayıtlı.", "error");
+            mesajYaz("Bu e-posta adresi zaten kayıtlı. Başka mail dene veya giriş yap.", "error");
         } else if (error.code === "auth/invalid-email") {
             mesajYaz("Geçerli bir e-posta adresi gir.", "error");
         } else if (error.code === "auth/weak-password") {
             mesajYaz("Şifre çok zayıf. En az 6 karakter kullan.", "error");
+        } else if (error.code === "auth/too-many-requests") {
+            mesajYaz("Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.", "error");
         } else {
             mesajYaz("Kayıt sırasında hata oluştu: " + error.message, "error");
         }
